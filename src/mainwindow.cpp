@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "imageprocessor.h"
 #include "filterconstants.h"
+#include "filtereditordialog.h"
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), originalImageLabel(new QLabel(this)), filteredImageLabel(new QLabel(this))
@@ -33,6 +35,8 @@ MainWindow::MainWindow(QWidget *parent)
     QPushButton *edgeButton = new QPushButton("Edge Detection", this);
     QPushButton *embossButton = new QPushButton("Emboss", this);
 
+    QPushButton *openFilterEditorButton = new QPushButton("Custom filter", this);
+
     QHBoxLayout *imageLayout = new QHBoxLayout();
     imageLayout->addWidget(originalImageLabel);
     imageLayout->addWidget(filteredImageLabel);
@@ -59,6 +63,7 @@ MainWindow::MainWindow(QWidget *parent)
     mainLayout->addLayout(imageLayout);
     mainLayout->addLayout(filterLayout1);
     mainLayout->addLayout(filterLayout2);
+    mainLayout->addWidget(openFilterEditorButton);
 
     setCentralWidget(centralWidget);
 
@@ -76,6 +81,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(sharpenButton, &QPushButton::clicked, this, &MainWindow::applySharpenFilter);
     connect(edgeButton, &QPushButton::clicked, this, &MainWindow::applyEdgeDetectionFilter);
     connect(embossButton, &QPushButton::clicked, this, &MainWindow::applyEmbossFilter);
+
+    connect(openFilterEditorButton, &QPushButton::clicked, this, &MainWindow::openFilterEditorDialog);
 
     adjustSize();
     setWindowTitle("Image Filter Application");
@@ -170,7 +177,7 @@ void MainWindow::applySharpenFilter()
     updateFilteredImage(ImageProcessor::sharpen(filteredImage));
 }
 
-void MainWindow::applyEdgeDetectionFilter()
+void MainWindow::applyEdgeDetectionFilter() 
 {
     updateFilteredImage(ImageProcessor::edgeDetection(filteredImage));
 }
@@ -178,4 +185,20 @@ void MainWindow::applyEdgeDetectionFilter()
 void MainWindow::applyEmbossFilter()
 {
     updateFilteredImage(ImageProcessor::emboss(filteredImage));
+}
+
+void MainWindow::openFilterEditorDialog()
+{
+    if (originalImage.isNull())
+    {
+        QMessageBox::warning(this, "Error", "No image loaded.");
+        return;
+    }
+
+    FilterEditorDialog dialog(this);
+    connect(&dialog, &FilterEditorDialog::filterApplied, this, [this](QVector<QVector<int>> kernel, int divisor, int offset, int anchorX, int anchorY) {
+        QImage newImage = ImageProcessor::applyConvolution(originalImage, kernel, 1.0/divisor, offset, anchorX, anchorY);
+        updateFilteredImage(newImage);
+    });
+    dialog.exec();
 }

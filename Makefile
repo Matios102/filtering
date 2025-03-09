@@ -52,12 +52,16 @@ OBJECTS_DIR   = obj/
 
 ####### Files
 
-SOURCES       = src/main.cpp \
+SOURCES       = main.cpp \
 		src/imageprocessor.cpp \
-		src/mainwindow.cpp obj/moc_mainwindow.cpp
+		src/filtereditordialog.cpp \
+		src/mainwindow.cpp obj/moc_filtereditordialog.cpp \
+		obj/moc_mainwindow.cpp
 OBJECTS       = obj/main.o \
 		obj/imageprocessor.o \
+		obj/filtereditordialog.o \
 		obj/mainwindow.o \
+		obj/moc_filtereditordialog.o \
 		obj/moc_mainwindow.o
 DIST          = /opt/homebrew/share/qt/mkspecs/features/spec_pre.prf \
 		/opt/homebrew/share/qt/mkspecs/features/device_config.prf \
@@ -423,8 +427,10 @@ DIST          = /opt/homebrew/share/qt/mkspecs/features/spec_pre.prf \
 		/opt/homebrew/share/qt/mkspecs/features/yacc.prf \
 		/opt/homebrew/share/qt/mkspecs/features/lex.prf \
 		filtering.pro include/imageprocessor.h \
-		include/mainwindow.h src/main.cpp \
+		include/filtereditordialog.h \
+		include/mainwindow.h main.cpp \
 		src/imageprocessor.cpp \
+		src/filtereditordialog.cpp \
 		src/mainwindow.cpp
 QMAKE_TARGET  = filtering
 DESTDIR       = 
@@ -1210,8 +1216,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /opt/homebrew/share/qt/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents include/imageprocessor.h include/mainwindow.h $(DISTDIR)/
-	$(COPY_FILE) --parents src/main.cpp src/imageprocessor.cpp src/mainwindow.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents include/imageprocessor.h include/filtereditordialog.h include/mainwindow.h $(DISTDIR)/
+	$(COPY_FILE) --parents main.cpp src/imageprocessor.cpp src/filtereditordialog.cpp src/mainwindow.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents mainwindow.ui $(DISTDIR)/
 
 
@@ -1247,9 +1253,24 @@ compiler_moc_predefs_clean:
 obj/moc_predefs.h: /opt/homebrew/share/qt/mkspecs/features/data/dummy.cpp
 	/Library/Developer/CommandLineTools/usr/bin/clang++ -pipe -stdlib=libc++ -O2 -std=gnu++1z $(EXPORT_ARCH_ARGS) -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -mmacosx-version-min=14.0 -Wall -Wextra -dM -E -o obj/moc_predefs.h /opt/homebrew/share/qt/mkspecs/features/data/dummy.cpp
 
-compiler_moc_header_make_all: obj/moc_mainwindow.cpp
+compiler_moc_header_make_all: obj/moc_filtereditordialog.cpp obj/moc_mainwindow.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) obj/moc_mainwindow.cpp
+	-$(DEL_FILE) obj/moc_filtereditordialog.cpp obj/moc_mainwindow.cpp
+obj/moc_filtereditordialog.cpp: include/filtereditordialog.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QDialog \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qdialog.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QTableWidget \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qtablewidget.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QSpinBox \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qspinbox.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QLineEdit \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qlineedit.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QPushButton \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qpushbutton.h \
+		obj/moc_predefs.h \
+		/opt/homebrew/share/qt/libexec/moc
+	/opt/homebrew/share/qt/libexec/moc $(DEFINES) --include /Users/mateuszosik/repos/Uni/Semester6/CG/Task1/filtering/obj/moc_predefs.h -I/opt/homebrew/share/qt/mkspecs/macx-clang -I/Users/mateuszosik/repos/Uni/Semester6/CG/Task1/filtering -I/Users/mateuszosik/repos/Uni/Semester6/CG/Task1/filtering/include -I/opt/homebrew/lib/QtWidgets.framework/Headers -I/opt/homebrew/lib/QtGui.framework/Headers -I/opt/homebrew/lib/QtCore.framework/Headers -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -I/Library/Developer/CommandLineTools/usr/lib/clang/16/include -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -I/Library/Developer/CommandLineTools/usr/include -F/opt/homebrew/lib include/filtereditordialog.h -o obj/moc_filtereditordialog.cpp
+
 obj/moc_mainwindow.cpp: include/mainwindow.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/QMainWindow \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/qmainwindow.h \
@@ -1266,7 +1287,6 @@ obj/moc_mainwindow.cpp: include/mainwindow.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/qpixmap.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/QImage \
 		/opt/homebrew/lib/QtGui.framework/Headers/qimage.h \
-		include/ui_mainwindow.h \
 		obj/moc_predefs.h \
 		/opt/homebrew/share/qt/libexec/moc
 	/opt/homebrew/share/qt/libexec/moc $(DEFINES) --include /Users/mateuszosik/repos/Uni/Semester6/CG/Task1/filtering/obj/moc_predefs.h -I/opt/homebrew/share/qt/mkspecs/macx-clang -I/Users/mateuszosik/repos/Uni/Semester6/CG/Task1/filtering -I/Users/mateuszosik/repos/Uni/Semester6/CG/Task1/filtering/include -I/opt/homebrew/lib/QtWidgets.framework/Headers -I/opt/homebrew/lib/QtGui.framework/Headers -I/opt/homebrew/lib/QtCore.framework/Headers -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -I/Library/Developer/CommandLineTools/usr/lib/clang/16/include -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -I/Library/Developer/CommandLineTools/usr/include -F/opt/homebrew/lib include/mainwindow.h -o obj/moc_mainwindow.cpp
@@ -1294,7 +1314,7 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean compiler_ui
 
 ####### Compile
 
-obj/main.o: src/main.cpp include/mainwindow.h \
+obj/main.o: main.cpp include/mainwindow.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/QMainWindow \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/qmainwindow.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/QLabel \
@@ -1310,10 +1330,9 @@ obj/main.o: src/main.cpp include/mainwindow.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/qpixmap.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/QImage \
 		/opt/homebrew/lib/QtGui.framework/Headers/qimage.h \
-		include/ui_mainwindow.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/QApplication \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/qapplication.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/main.o src/main.cpp
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/main.o main.cpp
 
 obj/imageprocessor.o: src/imageprocessor.cpp include/imageprocessor.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/QImage \
@@ -1324,6 +1343,36 @@ obj/imageprocessor.o: src/imageprocessor.cpp include/imageprocessor.h \
 		/opt/homebrew/lib/QtCore.framework/Headers/QtMath \
 		/opt/homebrew/lib/QtCore.framework/Headers/qmath.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/imageprocessor.o src/imageprocessor.cpp
+
+obj/filtereditordialog.o: src/filtereditordialog.cpp include/filtereditordialog.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QDialog \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qdialog.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QTableWidget \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qtablewidget.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QSpinBox \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qspinbox.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QLineEdit \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qlineedit.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QPushButton \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qpushbutton.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QVBoxLayout \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qboxlayout.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QHBoxLayout \
+		/opt/homebrew/lib/QtCore.framework/Headers/QFile \
+		/opt/homebrew/lib/QtCore.framework/Headers/qfile.h \
+		/opt/homebrew/lib/QtCore.framework/Headers/QTextStream \
+		/opt/homebrew/lib/QtCore.framework/Headers/qtextstream.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QFileDialog \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qfiledialog.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QMessageBox \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qmessagebox.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QLabel \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qlabel.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QFrame \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qframe.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QHeaderView \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qheaderview.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/filtereditordialog.o src/filtereditordialog.cpp
 
 obj/mainwindow.o: src/mainwindow.cpp include/mainwindow.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/QMainWindow \
@@ -1341,12 +1390,25 @@ obj/mainwindow.o: src/mainwindow.cpp include/mainwindow.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/qpixmap.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/QImage \
 		/opt/homebrew/lib/QtGui.framework/Headers/qimage.h \
-		include/ui_mainwindow.h \
 		include/imageprocessor.h \
 		/opt/homebrew/lib/QtCore.framework/Headers/QVector \
 		/opt/homebrew/lib/QtCore.framework/Headers/qvector.h \
-		include/filterconstants.h
+		include/filterconstants.h \
+		include/filtereditordialog.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QDialog \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qdialog.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QTableWidget \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qtablewidget.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QSpinBox \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qspinbox.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QLineEdit \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qlineedit.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QMessageBox \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qmessagebox.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/mainwindow.o src/mainwindow.cpp
+
+obj/moc_filtereditordialog.o: obj/moc_filtereditordialog.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/moc_filtereditordialog.o obj/moc_filtereditordialog.cpp
 
 obj/moc_mainwindow.o: obj/moc_mainwindow.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/moc_mainwindow.o obj/moc_mainwindow.cpp

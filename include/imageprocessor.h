@@ -11,7 +11,7 @@ public:
     static QImage adjustContrast(const QImage &image);
     static QImage gammaCorrection(const QImage &image);
 
-    static QImage applyConvolution(const QImage &image, const QVector<QVector<int>> &kernel, double factor, int bias);
+    static QImage applyConvolution(const QImage &image, const QVector<QVector<int>> &kernel, double factor, int bias, int anchorRow, int anchorCol);
     static QImage blur(const QImage &image);
     static QImage gaussianBlur(const QImage &image);
     static QImage sharpen(const QImage &image);

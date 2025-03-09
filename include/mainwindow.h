@@ -9,7 +9,6 @@
 #include <QFileDialog>
 #include <QPixmap>
 #include <QImage>
-#include "ui_mainwindow.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -42,6 +41,7 @@ private:
     QImage filteredImage;
 
     void updateFilteredImage(const QImage &newImage);
+    void openFilterEditorDialog();
 };
 
 #endif // MAINWINDOW_H

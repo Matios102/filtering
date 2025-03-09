@@ -2,10 +2,13 @@
 #include "filterconstants.h"
 #include <QtMath>
 
-QImage ImageProcessor::invertColors(const QImage &image) {
+QImage ImageProcessor::invertColors(const QImage &image)
+{
     QImage result = image;
-    for (int y = 0; y < image.height(); ++y) {
-        for (int x = 0; x < image.width(); ++x) {
+    for (int y = 0; y < image.height(); ++y)
+    {
+        for (int x = 0; x < image.width(); ++x)
+        {
             QColor color = image.pixelColor(x, y);
             color.setRgb(255 - color.red(), 255 - color.green(), 255 - color.blue());
             result.setPixelColor(x, y, color);
@@ -14,11 +17,14 @@ QImage ImageProcessor::invertColors(const QImage &image) {
     return result;
 }
 
-QImage ImageProcessor::adjustBrightness(const QImage &image) { 
+QImage ImageProcessor::adjustBrightness(const QImage &image)
+{
     int brightness = BRIGHTNESS_ADJUSTMENT;
     QImage result = image;
-    for (int y = 0; y < image.height(); ++y) {
-        for (int x = 0; x < image.width(); ++x) {
+    for (int y = 0; y < image.height(); ++y)
+    {
+        for (int x = 0; x < image.width(); ++x)
+        {
             QColor color = image.pixelColor(x, y);
             color.setRgb(qBound(0, color.red() + brightness, 255),
                          qBound(0, color.green() + brightness, 255),
@@ -29,13 +35,16 @@ QImage ImageProcessor::adjustBrightness(const QImage &image) {
     return result;
 }
 
-QImage ImageProcessor::adjustContrast(const QImage &image) {
+QImage ImageProcessor::adjustContrast(const QImage &image)
+{
     double contrast = CONTRAST_ADJUSTMENT;
     QImage result = image;
     double factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
 
-    for (int y = 0; y < image.height(); ++y) {
-        for (int x = 0; x < image.width(); ++x) {
+    for (int y = 0; y < image.height(); ++y)
+    {
+        for (int x = 0; x < image.width(); ++x)
+        {
             QColor color = image.pixelColor(x, y);
             color.setRgb(qBound(0, static_cast<int>(factor * (color.red() - 128) + 128), 255),
                          qBound(0, static_cast<int>(factor * (color.green() - 128) + 128), 255),
@@ -46,11 +55,14 @@ QImage ImageProcessor::adjustContrast(const QImage &image) {
     return result;
 }
 
-QImage ImageProcessor::gammaCorrection(const QImage &image) {
+QImage ImageProcessor::gammaCorrection(const QImage &image)
+{
     double gamma = GAMMA_CORRECTION;
     QImage result = image;
-    for (int y = 0; y < image.height(); ++y) {
-        for (int x = 0; x < image.width(); ++x) {
+    for (int y = 0; y < image.height(); ++y)
+    {
+        for (int x = 0; x < image.width(); ++x)
+        {
             QColor color = image.pixelColor(x, y);
             color.setRgb(qBound(0, static_cast<int>(255 * pow(color.red() / 255.0, gamma)), 255),
                          qBound(0, static_cast<int>(255 * pow(color.green() / 255.0, gamma)), 255),
@@ -61,19 +73,25 @@ QImage ImageProcessor::gammaCorrection(const QImage &image) {
     return result;
 }
 
-QImage ImageProcessor::applyConvolution(const QImage &image, const QVector<QVector<int>> &kernel, double factor, int bias) {
+QImage ImageProcessor::applyConvolution(const QImage &image, const QVector<QVector<int>> &kernel, double factor, int bias, int anchorRow, int anchorCol)
+{
     int width = image.width();
     int height = image.height();
     int kernelSize = kernel.size();
-    int offset = kernelSize / 2;
+    int offsetRow = anchorRow;
+    int offsetCol = anchorCol;
     QImage result = image;
 
-    for (int y = offset; y < height - offset; ++y) {
-        for (int x = offset; x < width - offset; ++x) {
+    for (int y = offsetRow; y < height - (kernelSize - offsetRow - 1); ++y)
+    {
+        for (int x = offsetCol; x < width - (kernelSize - offsetCol - 1); ++x)
+        {
             int r = 0, g = 0, b = 0;
-            for (int ky = 0; ky < kernelSize; ++ky) {
-                for (int kx = 0; kx < kernelSize; ++kx) {
-                    QColor pixelColor = image.pixelColor(x + kx - offset, y + ky - offset);
+            for (int ky = 0; ky < kernelSize; ++ky)
+            {
+                for (int kx = 0; kx < kernelSize; ++kx)
+                {
+                    QColor pixelColor = image.pixelColor(x + kx - offsetCol, y + ky - offsetRow);
                     r += pixelColor.red() * kernel[ky][kx];
                     g += pixelColor.green() * kernel[ky][kx];
                     b += pixelColor.blue() * kernel[ky][kx];
@@ -88,22 +106,27 @@ QImage ImageProcessor::applyConvolution(const QImage &image, const QVector<QVect
     return result;
 }
 
-QImage ImageProcessor::blur(const QImage &image) {
-    return applyConvolution(image, getBlurKernel(), BLUR_FACTOR, 0);
+QImage ImageProcessor::blur(const QImage &image)
+{
+    return applyConvolution(image, getBlurKernel(), BLUR_FACTOR, 0, 1, 1);
 }
 
-QImage ImageProcessor::gaussianBlur(const QImage &image) {
-    return applyConvolution(image, getGaussianBlurKernel(), GAUSSIAN_BLUR_FACTOR, 0);
+QImage ImageProcessor::gaussianBlur(const QImage &image)
+{
+    return applyConvolution(image, getGaussianBlurKernel(), GAUSSIAN_BLUR_FACTOR, 0, 1, 1);
 }
 
-QImage ImageProcessor::sharpen(const QImage &image) {
-    return applyConvolution(image, getSharpenKernel(), SHARPEN_FACTOR, 0);
+QImage ImageProcessor::sharpen(const QImage &image)
+{
+    return applyConvolution(image, getSharpenKernel(), SHARPEN_FACTOR, 0, 1, 1);
 }
 
-QImage ImageProcessor::edgeDetection(const QImage &image) {
-    return applyConvolution(image, getEdgeDetectionKernel(), EDGE_DETECTION_FACTOR, 0);
+QImage ImageProcessor::edgeDetection(const QImage &image)
+{
+    return applyConvolution(image, getEdgeDetectionKernel(), EDGE_DETECTION_FACTOR, 0, 1, 1);
 }
 
-QImage ImageProcessor::emboss(const QImage &image) {
-    return applyConvolution(image, getEmbossKernel(), EMBOSS_FACTOR, EMBOSS_BIAS);
+QImage ImageProcessor::emboss(const QImage &image)
+{
+    return applyConvolution(image, getEmbossKernel(), EMBOSS_FACTOR, EMBOSS_BIAS, 1, 1);
 }
