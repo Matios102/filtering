@@ -9,6 +9,7 @@
 #include <QFileDialog>
 #include <QPixmap>
 #include <QImage>
+#include "kernel.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -39,6 +40,12 @@ private:
     QPixmap originalPixmap;
     QImage originalImage;
     QImage filteredImage;
+
+    Kernel blurKernel;
+    Kernel gaussianBlurKernel;
+    Kernel sharpenKernel;
+    Kernel edgeDetectionKernel;
+    Kernel embossKernel;
 
     void updateFilteredImage(const QImage &newImage);
     void openFilterEditorDialog();

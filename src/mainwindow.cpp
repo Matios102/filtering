@@ -3,19 +3,105 @@
 #include "filterconstants.h"
 #include "filtereditordialog.h"
 #include <QMessageBox>
+#include <iostream>
+#include <QScrollArea>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), originalImageLabel(new QLabel(this)), filteredImageLabel(new QLabel(this))
 {
-    originalImageLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    originalImageLabel->setAlignment(Qt::AlignCenter);
-    originalImageLabel->setMinimumSize(100, 100); // Set minimum size
-    originalImageLabel->setMaximumSize(800, 800); // Set maximum size
+    try
+    {
+        blurKernel = Kernel(PREDEFINED_FILTERS_DIR + BLUR_FILTER);
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error loading blur filter: " << e.what() << std::endl;
+        QVector<QVector<int>> kernel = getBlurKernel();
+        int rows = kernel.size();
+        int cols = kernel[0].size();
 
-    filteredImageLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        blurKernel = Kernel(rows, cols, kernel, BLUR_DIVISOR, BLUR_OFFSET, BLUR_ANCHOR_X, BLUR_ANCHOR_Y);
+    }
+
+    try
+    {
+        gaussianBlurKernel = Kernel(PREDEFINED_FILTERS_DIR + GAUSSIAN_BLUR_FILTER);
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error loading gaussian blur filter: " << e.what() << std::endl;
+        QVector<QVector<int>> kernel = getGaussianBlurKernel();
+        int rows = kernel.size();
+        int cols = kernel[0].size();
+
+        gaussianBlurKernel = Kernel(rows, cols, kernel, BLUR_DIVISOR, BLUR_OFFSET, BLUR_ANCHOR_X, BLUR_ANCHOR_Y);
+    }
+
+    try
+    {
+        sharpenKernel = Kernel(PREDEFINED_FILTERS_DIR + SHARPEN_FILTER);
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error loading sharpen filter: " << e.what() << std::endl;
+        QVector<QVector<int>> kernel = getSharpenKernel();
+        int rows = kernel.size();
+        int cols = kernel[0].size();
+
+        sharpenKernel = Kernel(rows, cols, kernel, BLUR_DIVISOR, BLUR_OFFSET, BLUR_ANCHOR_X, BLUR_ANCHOR_Y);
+    }
+
+    try
+    {
+        edgeDetectionKernel = Kernel(PREDEFINED_FILTERS_DIR + EDGE_DETECTION_FILTER);
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error loading edge detection filter: " << e.what() << std::endl;
+        QVector<QVector<int>> kernel = getEdgeDetectionKernel();
+        int rows = kernel.size();
+        int cols = kernel[0].size();
+
+        edgeDetectionKernel = Kernel(rows, cols, kernel, BLUR_DIVISOR, BLUR_OFFSET, BLUR_ANCHOR_X, BLUR_ANCHOR_Y);
+    }
+
+    try
+    {
+        embossKernel = Kernel(PREDEFINED_FILTERS_DIR + EMBOSS_FILTER);
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error loading emboss filter: " << e.what() << std::endl;
+        QVector<QVector<int>> kernel = getEmbossKernel();
+        int rows = kernel.size();
+        int cols = kernel[0].size();
+
+        embossKernel = Kernel(rows, cols, kernel, BLUR_DIVISOR, BLUR_OFFSET, BLUR_ANCHOR_X, BLUR_ANCHOR_Y);
+    }
+
+
+    originalImageLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+    originalImageLabel->setAlignment(Qt::AlignCenter);
+    originalImageLabel->setMinimumSize(100, 100);
+    originalImageLabel->setMaximumSize(500, 500);
+
+    filteredImageLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     filteredImageLabel->setAlignment(Qt::AlignCenter);
-    filteredImageLabel->setMinimumSize(100, 100); // Set minimum size
-    filteredImageLabel->setMaximumSize(800, 800); // Set maximum size
+    filteredImageLabel->setMinimumSize(100, 100);
+    filteredImageLabel->setMaximumSize(500, 500);
+
+    QScrollArea *originalImageScrollArea = new QScrollArea(this);
+    originalImageScrollArea->setWidget(originalImageLabel);
+    originalImageScrollArea->setWidgetResizable(true);
+    originalImageScrollArea->setFixedSize(500, 500);
+    
+    
+    QScrollArea *filteredImageScrollArea = new QScrollArea(this);
+    filteredImageScrollArea->setWidget(filteredImageLabel);
+    filteredImageScrollArea->setWidgetResizable(true);
+    filteredImageScrollArea->setFixedSize(500, 500);
+
+
 
     QWidget *centralWidget = new QWidget(this);
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
@@ -38,8 +124,8 @@ MainWindow::MainWindow(QWidget *parent)
     QPushButton *openFilterEditorButton = new QPushButton("Custom filter", this);
 
     QHBoxLayout *imageLayout = new QHBoxLayout();
-    imageLayout->addWidget(originalImageLabel);
-    imageLayout->addWidget(filteredImageLabel);
+    imageLayout->addWidget(originalImageScrollArea);
+    imageLayout->addWidget(filteredImageScrollArea);
 
     QHBoxLayout *buttonLayout = new QHBoxLayout();
     buttonLayout->addWidget(loadButton);
@@ -99,37 +185,35 @@ void MainWindow::loadImage()
         originalPixmap = QPixmap::fromImage(originalImage);
         filteredImage = originalImage;
 
-        QSize imageSize = originalImage.size();
-        imageSize.setWidth(qBound(100, imageSize.width(), 800));
-        imageSize.setHeight(qBound(100, imageSize.height(), 800));
+        originalImageLabel->setPixmap(originalPixmap);
+        filteredImageLabel->setPixmap(originalPixmap);
 
-        originalImageLabel->setPixmap(originalPixmap.scaled(imageSize, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-        filteredImageLabel->setPixmap(originalPixmap.scaled(imageSize, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-
-        originalImageLabel->setFixedSize(imageSize);
-        filteredImageLabel->setFixedSize(imageSize);
-
-        // Ensure widgets allow shrinking
-        originalImageLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-        filteredImageLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+        originalImageLabel->setFixedSize(originalPixmap.size());
+        filteredImageLabel->setFixedSize(originalPixmap.size());
     }
 }
 
-
 void MainWindow::saveImage()
 {
-    if (!filteredImage.isNull())
+    if (originalImage.isNull())
     {
-        QString fileName = QFileDialog::getSaveFileName(this, "Save Image", "", "Images (*.png *.jpg *.bmp)");
-        if (!fileName.isEmpty())
-        {
-            filteredImage.save(fileName);
-        }
+        QMessageBox::warning(this, "Error", "No image loaded.");
+        return;
+    }
+    QString fileName = QFileDialog::getSaveFileName(this, "Save Image", "", "Images (*.png *.jpg *.bmp)");
+    if (!fileName.isEmpty())
+    {
+        filteredImage.save(fileName);
     }
 }
 
 void MainWindow::resetImage()
 {
+    if (originalImage.isNull())
+    {
+        QMessageBox::warning(this, "Error", "No image loaded.");
+        return;
+    }
     filteredImage = originalImage;
     QPixmap scaledPixmap = QPixmap::fromImage(filteredImage).scaled(filteredImageLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
     filteredImageLabel->setPixmap(scaledPixmap);
@@ -144,47 +228,92 @@ void MainWindow::updateFilteredImage(const QImage &newImage)
 
 void MainWindow::applyInversionFilter()
 {
+    if (originalImage.isNull())
+    {
+        QMessageBox::warning(this, "Error", "No image loaded.");
+        return;
+    }
     updateFilteredImage(ImageProcessor::invertColors(filteredImage));
 }
 
 void MainWindow::applyBrightnessFilter()
 {
+    if (originalImage.isNull())
+    {
+        QMessageBox::warning(this, "Error", "No image loaded.");
+        return;
+    }
     updateFilteredImage(ImageProcessor::adjustBrightness(filteredImage));
 }
 
 void MainWindow::applyContrastFilter()
 {
+    if (originalImage.isNull())
+    {
+        QMessageBox::warning(this, "Error", "No image loaded.");
+        return;
+    }
     updateFilteredImage(ImageProcessor::adjustContrast(filteredImage));
 }
 
 void MainWindow::applyGammaCorrectionFilter()
 {
+    if (originalImage.isNull())
+    {
+        QMessageBox::warning(this, "Error", "No image loaded.");
+        return;
+    }
     updateFilteredImage(ImageProcessor::gammaCorrection(filteredImage));
 }
 
 void MainWindow::applyBlurFilter()
 {
-    updateFilteredImage(ImageProcessor::blur(filteredImage));
+    if (originalImage.isNull())
+    {
+        QMessageBox::warning(this, "Error", "No image loaded.");
+        return;
+    }
+    updateFilteredImage(ImageProcessor::applyConvolution(filteredImage, blurKernel));
 }
 
 void MainWindow::applyGaussianBlurFilter()
 {
-    updateFilteredImage(ImageProcessor::gaussianBlur(filteredImage));
+    if (originalImage.isNull())
+    {
+        QMessageBox::warning(this, "Error", "No image loaded.");
+        return;
+    }
+    updateFilteredImage(ImageProcessor::applyConvolution(filteredImage, gaussianBlurKernel));
 }
 
 void MainWindow::applySharpenFilter()
 {
-    updateFilteredImage(ImageProcessor::sharpen(filteredImage));
+    if (originalImage.isNull())
+    {
+        QMessageBox::warning(this, "Error", "No image loaded.");
+        return;
+    }
+    updateFilteredImage(ImageProcessor::applyConvolution(filteredImage, sharpenKernel));
 }
 
-void MainWindow::applyEdgeDetectionFilter() 
+void MainWindow::applyEdgeDetectionFilter()
 {
-    updateFilteredImage(ImageProcessor::edgeDetection(filteredImage));
+    if (originalImage.isNull())
+    {
+        QMessageBox::warning(this, "Error", "No image loaded.");
+        return;
+    }
+    updateFilteredImage(ImageProcessor::applyConvolution(filteredImage, edgeDetectionKernel));
 }
 
 void MainWindow::applyEmbossFilter()
 {
-    updateFilteredImage(ImageProcessor::emboss(filteredImage));
+    if (originalImage.isNull())
+    {
+        QMessageBox::warning(this, "Error", "No image loaded.");
+        return;
+    }
+    updateFilteredImage(ImageProcessor::applyConvolution(filteredImage, embossKernel));
 }
 
 void MainWindow::openFilterEditorDialog()
@@ -196,9 +325,9 @@ void MainWindow::openFilterEditorDialog()
     }
 
     FilterEditorDialog dialog(this);
-    connect(&dialog, &FilterEditorDialog::filterApplied, this, [this](QVector<QVector<int>> kernel, int divisor, int offset, int anchorX, int anchorY) {
-        QImage newImage = ImageProcessor::applyConvolution(originalImage, kernel, 1.0/divisor, offset, anchorX, anchorY);
-        updateFilteredImage(newImage);
-    });
+    connect(&dialog, &FilterEditorDialog::filterApplied, this, [this](Kernel kernel)
+            {
+        QImage newImage = ImageProcessor::applyConvolution(originalImage, kernel);
+        updateFilteredImage(newImage); });
     dialog.exec();
 }

@@ -73,28 +73,34 @@ QImage ImageProcessor::gammaCorrection(const QImage &image)
     return result;
 }
 
-QImage ImageProcessor::applyConvolution(const QImage &image, const QVector<QVector<int>> &kernel, double factor, int bias, int anchorRow, int anchorCol)
+QImage ImageProcessor::applyConvolution(const QImage &image, const Kernel &kernel)
 {
-    int width = image.width();
-    int height = image.height();
-    int kernelSize = kernel.size();
-    int offsetRow = anchorRow;
-    int offsetCol = anchorCol;
+    const int divisor = kernel.getDivisor();
+    const double factor = 1.0 / divisor;
+    const int bias = kernel.getOffset();
+    const int offsetRow = kernel.getAnchorX();
+    const int offsetCol = kernel.getAnchorY();
+    const int width = image.width();
+    const int height = image.height();
+    const QVector<QVector<int>> kernelTable = kernel.getKernel();
+    const int kernelSize = kernelTable.size();
     QImage result = image;
 
-    for (int y = offsetRow; y < height - (kernelSize - offsetRow - 1); ++y)
+    for (int y = 0; y < height; ++y)
     {
-        for (int x = offsetCol; x < width - (kernelSize - offsetCol - 1); ++x)
+        for (int x = 0; x < width; ++x)
         {
             int r = 0, g = 0, b = 0;
             for (int ky = 0; ky < kernelSize; ++ky)
             {
                 for (int kx = 0; kx < kernelSize; ++kx)
                 {
-                    QColor pixelColor = image.pixelColor(x + kx - offsetCol, y + ky - offsetRow);
-                    r += pixelColor.red() * kernel[ky][kx];
-                    g += pixelColor.green() * kernel[ky][kx];
-                    b += pixelColor.blue() * kernel[ky][kx];
+                    int pixelX = qBound(0, x + kx - offsetCol, width - 1);
+                    int pixelY = qBound(0, y + ky - offsetRow, height - 1);
+                    QColor pixelColor = image.pixelColor(pixelX, pixelY);
+                    r += pixelColor.red() * kernelTable[ky][kx];
+                    g += pixelColor.green() * kernelTable[ky][kx];
+                    b += pixelColor.blue() * kernelTable[ky][kx];
                 }
             }
             r = qBound(0, static_cast<int>(factor * r + bias), 255);
@@ -104,29 +110,4 @@ QImage ImageProcessor::applyConvolution(const QImage &image, const QVector<QVect
         }
     }
     return result;
-}
-
-QImage ImageProcessor::blur(const QImage &image)
-{
-    return applyConvolution(image, getBlurKernel(), BLUR_FACTOR, 0, 1, 1);
-}
-
-QImage ImageProcessor::gaussianBlur(const QImage &image)
-{
-    return applyConvolution(image, getGaussianBlurKernel(), GAUSSIAN_BLUR_FACTOR, 0, 1, 1);
-}
-
-QImage ImageProcessor::sharpen(const QImage &image)
-{
-    return applyConvolution(image, getSharpenKernel(), SHARPEN_FACTOR, 0, 1, 1);
-}
-
-QImage ImageProcessor::edgeDetection(const QImage &image)
-{
-    return applyConvolution(image, getEdgeDetectionKernel(), EDGE_DETECTION_FACTOR, 0, 1, 1);
-}
-
-QImage ImageProcessor::emboss(const QImage &image)
-{
-    return applyConvolution(image, getEmbossKernel(), EMBOSS_FACTOR, EMBOSS_BIAS, 1, 1);
 }

@@ -6,6 +6,7 @@
 #include <QSpinBox>
 #include <QLineEdit>
 #include <QPushButton>
+#include "kernel.h"
 
 class FilterEditorDialog : public QDialog {
     Q_OBJECT
@@ -19,12 +20,13 @@ public:
     int getAnchorCol() const;
 
 signals:
-    void filterApplied(QVector<QVector<int>>, int, int, int, int);
+    void filterApplied(Kernel customKer);
 
 private slots:
     void updateKernelSize();
     void computeDivisor();
     void saveCustomFilter();
+    void saveAsCustomFilter();
     void loadCustomFilter();
     void applyFilter();
 
@@ -36,6 +38,7 @@ private:
     QLineEdit *offsetEdit;
     QSpinBox *anchorRowSpinBox;
     QSpinBox *anchorColSpinBox;
+    QString filterPath;
 };
 
 #endif // FILTEREDITORDIALOG_H

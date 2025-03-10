@@ -53,11 +53,13 @@ OBJECTS_DIR   = obj/
 ####### Files
 
 SOURCES       = main.cpp \
+		src/kernel.cpp \
 		src/imageprocessor.cpp \
 		src/filtereditordialog.cpp \
 		src/mainwindow.cpp obj/moc_filtereditordialog.cpp \
 		obj/moc_mainwindow.cpp
 OBJECTS       = obj/main.o \
+		obj/kernel.o \
 		obj/imageprocessor.o \
 		obj/filtereditordialog.o \
 		obj/mainwindow.o \
@@ -426,9 +428,11 @@ DIST          = /opt/homebrew/share/qt/mkspecs/features/spec_pre.prf \
 		/opt/homebrew/share/qt/mkspecs/features/exceptions.prf \
 		/opt/homebrew/share/qt/mkspecs/features/yacc.prf \
 		/opt/homebrew/share/qt/mkspecs/features/lex.prf \
-		filtering.pro include/imageprocessor.h \
+		filtering.pro include/kernel.h \
+		include/imageprocessor.h \
 		include/filtereditordialog.h \
 		include/mainwindow.h main.cpp \
+		src/kernel.cpp \
 		src/imageprocessor.cpp \
 		src/filtereditordialog.cpp \
 		src/mainwindow.cpp
@@ -1216,8 +1220,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /opt/homebrew/share/qt/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents include/imageprocessor.h include/filtereditordialog.h include/mainwindow.h $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp src/imageprocessor.cpp src/filtereditordialog.cpp src/mainwindow.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents include/kernel.h include/imageprocessor.h include/filtereditordialog.h include/mainwindow.h $(DISTDIR)/
+	$(COPY_FILE) --parents main.cpp src/kernel.cpp src/imageprocessor.cpp src/filtereditordialog.cpp src/mainwindow.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents mainwindow.ui $(DISTDIR)/
 
 
@@ -1267,6 +1271,11 @@ obj/moc_filtereditordialog.cpp: include/filtereditordialog.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/qlineedit.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/QPushButton \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/qpushbutton.h \
+		include/kernel.h \
+		/opt/homebrew/lib/QtCore.framework/Headers/QVector \
+		/opt/homebrew/lib/QtCore.framework/Headers/qvector.h \
+		/opt/homebrew/lib/QtCore.framework/Headers/QString \
+		/opt/homebrew/lib/QtCore.framework/Headers/qstring.h \
 		obj/moc_predefs.h \
 		/opt/homebrew/share/qt/libexec/moc
 	/opt/homebrew/share/qt/libexec/moc $(DEFINES) --include /Users/mateuszosik/repos/Uni/Semester6/CG/Task1/filtering/obj/moc_predefs.h -I/opt/homebrew/share/qt/mkspecs/macx-clang -I/Users/mateuszosik/repos/Uni/Semester6/CG/Task1/filtering -I/Users/mateuszosik/repos/Uni/Semester6/CG/Task1/filtering/include -I/opt/homebrew/lib/QtWidgets.framework/Headers -I/opt/homebrew/lib/QtGui.framework/Headers -I/opt/homebrew/lib/QtCore.framework/Headers -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -I/Library/Developer/CommandLineTools/usr/lib/clang/16/include -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -I/Library/Developer/CommandLineTools/usr/include -F/opt/homebrew/lib include/filtereditordialog.h -o obj/moc_filtereditordialog.cpp
@@ -1287,6 +1296,11 @@ obj/moc_mainwindow.cpp: include/mainwindow.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/qpixmap.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/QImage \
 		/opt/homebrew/lib/QtGui.framework/Headers/qimage.h \
+		include/kernel.h \
+		/opt/homebrew/lib/QtCore.framework/Headers/QVector \
+		/opt/homebrew/lib/QtCore.framework/Headers/qvector.h \
+		/opt/homebrew/lib/QtCore.framework/Headers/QString \
+		/opt/homebrew/lib/QtCore.framework/Headers/qstring.h \
 		obj/moc_predefs.h \
 		/opt/homebrew/share/qt/libexec/moc
 	/opt/homebrew/share/qt/libexec/moc $(DEFINES) --include /Users/mateuszosik/repos/Uni/Semester6/CG/Task1/filtering/obj/moc_predefs.h -I/opt/homebrew/share/qt/mkspecs/macx-clang -I/Users/mateuszosik/repos/Uni/Semester6/CG/Task1/filtering -I/Users/mateuszosik/repos/Uni/Semester6/CG/Task1/filtering/include -I/opt/homebrew/lib/QtWidgets.framework/Headers -I/opt/homebrew/lib/QtGui.framework/Headers -I/opt/homebrew/lib/QtCore.framework/Headers -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -I/Library/Developer/CommandLineTools/usr/lib/clang/16/include -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -I/Library/Developer/CommandLineTools/usr/include -F/opt/homebrew/lib include/mainwindow.h -o obj/moc_mainwindow.cpp
@@ -1330,15 +1344,36 @@ obj/main.o: main.cpp include/mainwindow.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/qpixmap.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/QImage \
 		/opt/homebrew/lib/QtGui.framework/Headers/qimage.h \
+		include/kernel.h \
+		/opt/homebrew/lib/QtCore.framework/Headers/QVector \
+		/opt/homebrew/lib/QtCore.framework/Headers/qvector.h \
+		/opt/homebrew/lib/QtCore.framework/Headers/QString \
+		/opt/homebrew/lib/QtCore.framework/Headers/qstring.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/QApplication \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/qapplication.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/main.o main.cpp
+
+obj/kernel.o: src/kernel.cpp include/kernel.h \
+		/opt/homebrew/lib/QtCore.framework/Headers/QVector \
+		/opt/homebrew/lib/QtCore.framework/Headers/qvector.h \
+		/opt/homebrew/lib/QtCore.framework/Headers/QString \
+		/opt/homebrew/lib/QtCore.framework/Headers/qstring.h \
+		/opt/homebrew/lib/QtCore.framework/Headers/QFile \
+		/opt/homebrew/lib/QtCore.framework/Headers/qfile.h \
+		/opt/homebrew/lib/QtCore.framework/Headers/QTextStream \
+		/opt/homebrew/lib/QtCore.framework/Headers/qtextstream.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QMessageBox \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qmessagebox.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/kernel.o src/kernel.cpp
 
 obj/imageprocessor.o: src/imageprocessor.cpp include/imageprocessor.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/QImage \
 		/opt/homebrew/lib/QtGui.framework/Headers/qimage.h \
 		/opt/homebrew/lib/QtCore.framework/Headers/QVector \
 		/opt/homebrew/lib/QtCore.framework/Headers/qvector.h \
+		include/kernel.h \
+		/opt/homebrew/lib/QtCore.framework/Headers/QString \
+		/opt/homebrew/lib/QtCore.framework/Headers/qstring.h \
 		include/filterconstants.h \
 		/opt/homebrew/lib/QtCore.framework/Headers/QtMath \
 		/opt/homebrew/lib/QtCore.framework/Headers/qmath.h
@@ -1355,6 +1390,11 @@ obj/filtereditordialog.o: src/filtereditordialog.cpp include/filtereditordialog.
 		/opt/homebrew/lib/QtWidgets.framework/Headers/qlineedit.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/QPushButton \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/qpushbutton.h \
+		include/kernel.h \
+		/opt/homebrew/lib/QtCore.framework/Headers/QVector \
+		/opt/homebrew/lib/QtCore.framework/Headers/qvector.h \
+		/opt/homebrew/lib/QtCore.framework/Headers/QString \
+		/opt/homebrew/lib/QtCore.framework/Headers/qstring.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/QVBoxLayout \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/qboxlayout.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/QHBoxLayout \
@@ -1390,9 +1430,12 @@ obj/mainwindow.o: src/mainwindow.cpp include/mainwindow.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/qpixmap.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/QImage \
 		/opt/homebrew/lib/QtGui.framework/Headers/qimage.h \
-		include/imageprocessor.h \
+		include/kernel.h \
 		/opt/homebrew/lib/QtCore.framework/Headers/QVector \
 		/opt/homebrew/lib/QtCore.framework/Headers/qvector.h \
+		/opt/homebrew/lib/QtCore.framework/Headers/QString \
+		/opt/homebrew/lib/QtCore.framework/Headers/qstring.h \
+		include/imageprocessor.h \
 		include/filterconstants.h \
 		include/filtereditordialog.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/QDialog \

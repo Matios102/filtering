@@ -25,3 +25,6 @@ ui_*.h
 
 # Ignore application bundle
 filtering.app/
+
+# Ignore testing images
+assets/images

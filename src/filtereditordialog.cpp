@@ -8,7 +8,6 @@
 #include <QLabel>
 #include <QFrame>
 #include <QHeaderView>
-#include <iostream>
 
 FilterEditorDialog::FilterEditorDialog(QWidget *parent) : QDialog(parent)
 {
@@ -42,7 +41,6 @@ FilterEditorDialog::FilterEditorDialog(QWidget *parent) : QDialog(parent)
     connect(rowsSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &FilterEditorDialog::updateKernelSize);
     connect(colsSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &FilterEditorDialog::updateKernelSize);
 
-    // ---- Filter Settings ----
     divisorEdit = new QLineEdit(this);
     divisorEdit->setFixedWidth(80);
     offsetEdit = new QLineEdit(this);
@@ -56,14 +54,15 @@ FilterEditorDialog::FilterEditorDialog(QWidget *parent) : QDialog(parent)
     anchorRowSpinBox->setFixedWidth(50);
     anchorColSpinBox->setFixedWidth(50);
 
-    // ---- Buttons ----
     QPushButton *computeDivisorButton = new QPushButton("Compute", this);
     QPushButton *saveFilterButton = new QPushButton("Save", this);
+    QPushButton *saveAsFiterButton = new QPushButton("Save As", this);
     QPushButton *loadFilterButton = new QPushButton("Load", this);
     QPushButton *applyFilterButton = new QPushButton("Apply", this);
 
     connect(computeDivisorButton, &QPushButton::clicked, this, &FilterEditorDialog::computeDivisor);
     connect(saveFilterButton, &QPushButton::clicked, this, &FilterEditorDialog::saveCustomFilter);
+    connect(saveAsFiterButton, &QPushButton::clicked, this, &FilterEditorDialog::saveAsCustomFilter);
     connect(loadFilterButton, &QPushButton::clicked, this, &FilterEditorDialog::loadCustomFilter);
     connect(applyFilterButton, &QPushButton::clicked, this, &FilterEditorDialog::applyFilter);
 
@@ -97,6 +96,7 @@ FilterEditorDialog::FilterEditorDialog(QWidget *parent) : QDialog(parent)
 
     buttonsLayout->addWidget(loadFilterButton);
     buttonsLayout->addWidget(saveFilterButton);
+    buttonsLayout->addWidget(saveAsFiterButton);
     buttonsLayout->addWidget(applyFilterButton);
     buttonsLayout->setSpacing(15);
 
@@ -156,11 +156,13 @@ void FilterEditorDialog::computeDivisor()
 
 void FilterEditorDialog::saveCustomFilter()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, "Save Filter", "", "Filter Files (*.flt)");
-    if (fileName.isEmpty())
+    if (filterPath.isEmpty())
+    {
+        saveAsCustomFilter();
         return;
+    }
 
-    QFile file(fileName);
+    QFile file(filterPath);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
     {
         QMessageBox::warning(this, "Error", "Could not save filter.");
@@ -182,6 +184,18 @@ void FilterEditorDialog::saveCustomFilter()
     out << anchorRowSpinBox->value() << " " << anchorColSpinBox->value() << "\n";
 
     file.close();
+
+    QMessageBox::information(this, "Success", "Filter saved.");
+}
+
+void FilterEditorDialog::saveAsCustomFilter()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, "Save Filter", "", "Filter Files (*.flt)");
+    if (fileName.isEmpty())
+        return;
+
+    this->filterPath = fileName;
+    saveCustomFilter();
 }
 
 void FilterEditorDialog::loadCustomFilter()
@@ -189,6 +203,8 @@ void FilterEditorDialog::loadCustomFilter()
     QString fileName = QFileDialog::getOpenFileName(this, "Load Filter", "", "Filter Files (*.flt)");
     if (fileName.isEmpty())
         return;
+
+    this->filterPath = fileName;
 
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -230,7 +246,6 @@ void FilterEditorDialog::loadCustomFilter()
     int anchorX, anchorY;
     in >> anchorX >> anchorY;
 
-    std::cout << "Anchor: " << anchorX << " " << anchorY << std::endl;
     anchorRowSpinBox->setValue(anchorX);
     anchorColSpinBox->setValue(anchorY);
 
@@ -247,7 +262,8 @@ void FilterEditorDialog::applyFilter()
             kernel[r][c] = kernelTable->item(r, c) ? kernelTable->item(r, c)->text().toInt() : 0;
         }
     }
-    emit filterApplied(kernel, divisorEdit->text().toInt(), offsetEdit->text().toInt(),
-                       anchorRowSpinBox->value(), anchorColSpinBox->value());
+    Kernel customKernel(rowsSpinBox->value(), colsSpinBox->value(), kernel, divisorEdit->text().toInt(), offsetEdit->text().toInt(),
+                        anchorRowSpinBox->value(), anchorColSpinBox->value());
+    emit filterApplied(customKernel);
     accept();
 }

@@ -2,6 +2,14 @@
 #define FILTERCONSTANTS_H
 
 #include <QVector>
+#include <QString>
+
+const QString PREDEFINED_FILTERS_DIR = "./assets/filters/";
+const QString BLUR_FILTER = "blur.flt";
+const QString GAUSSIAN_BLUR_FILTER = "gaussian_blur.flt";
+const QString SHARPEN_FILTER = "sharpen.flt";
+const QString EDGE_DETECTION_FILTER = "edge_detection.flt";
+const QString EMBOSS_FILTER = "emboss.flt";
 
 // Functional Filter Constants
 const int BRIGHTNESS_ADJUSTMENT = 10;
@@ -51,12 +59,30 @@ inline QVector<QVector<int>> getEmbossKernel()
         {0, 1, 2}};
 }
 
-// Scaling Factors and Biases
-const double BLUR_FACTOR = 1.0 / 9;
-const double GAUSSIAN_BLUR_FACTOR = 1.0 / 64;
-const double SHARPEN_FACTOR = 1.0;
-const double EDGE_DETECTION_FACTOR = 1.0;
-const double EMBOSS_FACTOR = 1.0;
-const int EMBOSS_BIAS = 128;
+// Kernel Constants
+const int BLUR_DIVISOR = 9;
+const int BLUR_OFFSET = 0;
+const int BLUR_ANCHOR_X = 1;
+const int BLUR_ANCHOR_Y = 1;
+
+const int GAUSSIAN_BLUR_DIVISOR = 64;
+const int GAUSSIAN_BLUR_OFFSET = 0;
+const int GAUSSIAN_BLUR_ANCHOR_X = 2;
+const int GAUSSIAN_BLUR_ANCHOR_Y = 2;
+
+const int SHARPEN_DIVISOR = 1;
+const int SHARPEN_OFFSET = 0;
+const int SHARPEN_ANCHOR_X = 1;
+const int SHARPEN_ANCHOR_Y = 1;
+
+const int EDGE_DETECTION_DIVISOR = 1;
+const int EDGE_DETECTION_OFFSET = 0;
+const int EDGE_DETECTION_ANCHOR_X = 1;
+const int EDGE_DETECTION_ANCHOR_Y = 1;
+
+const int EMBOSS_DIVISOR = 1;
+const int EMBOSS_OFFSET = 128;
+const int EMBOSS_ANCHOR_X = 1;
+const int EMBOSS_ANCHOR_Y = 1;
 
 #endif // FILTERCONSTANTS_H

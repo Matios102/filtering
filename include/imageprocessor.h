@@ -3,6 +3,7 @@
 
 #include <QImage>
 #include <QVector>
+#include "kernel.h"
 
 class ImageProcessor {
 public:
@@ -11,12 +12,7 @@ public:
     static QImage adjustContrast(const QImage &image);
     static QImage gammaCorrection(const QImage &image);
 
-    static QImage applyConvolution(const QImage &image, const QVector<QVector<int>> &kernel, double factor, int bias, int anchorRow, int anchorCol);
-    static QImage blur(const QImage &image);
-    static QImage gaussianBlur(const QImage &image);
-    static QImage sharpen(const QImage &image);
-    static QImage edgeDetection(const QImage &image);
-    static QImage emboss(const QImage &image);
+    static QImage applyConvolution(const QImage &image, const Kernel &kernel);
 };
 
 #endif // IMAGEPROCESSOR_H

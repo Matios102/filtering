@@ -10,12 +10,14 @@ CONFIG += c++17
 
 SOURCES += \
     main.cpp \
+    src/kernel.cpp \
     src/imageprocessor.cpp \
     src/filtereditordialog.cpp \
     src/mainwindow.cpp
 
 
 HEADERS += \
+    include/kernel.h \
     include/imageprocessor.h \
     include/filtereditordialog.h \
     include/mainwindow.h
