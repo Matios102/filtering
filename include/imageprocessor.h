@@ -13,6 +13,7 @@ public:
     static QImage gammaCorrection(const QImage &image);
 
     static QImage applyConvolution(const QImage &image, const Kernel &kernel);
+    static QImage applyMedianFilter(const QImage &image, int kernelSize);
 };
 
 #endif // IMAGEPROCESSOR_H

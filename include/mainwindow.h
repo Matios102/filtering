@@ -9,6 +9,7 @@
 #include <QFileDialog>
 #include <QPixmap>
 #include <QImage>
+#include <QSpinBox>
 #include "kernel.h"
 
 class MainWindow : public QMainWindow {
@@ -33,6 +34,7 @@ private slots:
     void applySharpenFilter();
     void applyEdgeDetectionFilter();
     void applyEmbossFilter();
+    void applyMedianFilter();
 
 private:
     QLabel *originalImageLabel;
@@ -46,6 +48,8 @@ private:
     Kernel sharpenKernel;
     Kernel edgeDetectionKernel;
     Kernel embossKernel;
+
+    QSpinBox *medianSpinBox;
 
     void updateFilteredImage(const QImage &newImage);
     void openFilterEditorDialog();

@@ -120,6 +120,10 @@ MainWindow::MainWindow(QWidget *parent)
     QPushButton *sharpenButton = new QPushButton("Sharpen", this);
     QPushButton *edgeButton = new QPushButton("Edge Detection", this);
     QPushButton *embossButton = new QPushButton("Emboss", this);
+    QPushButton *medianButton = new QPushButton("Median Filter", this);
+    this->medianSpinBox = new QSpinBox(this);
+    this->medianSpinBox->setRange(1, 15);
+    this->medianSpinBox->setSingleStep(2);
 
     QPushButton *openFilterEditorButton = new QPushButton("Custom filter", this);
 
@@ -144,6 +148,8 @@ MainWindow::MainWindow(QWidget *parent)
     filterLayout2->addWidget(sharpenButton);
     filterLayout2->addWidget(edgeButton);
     filterLayout2->addWidget(embossButton);
+    filterLayout2->addWidget(medianButton);
+    filterLayout2->addWidget(medianSpinBox);
 
     mainLayout->addLayout(buttonLayout);
     mainLayout->addLayout(imageLayout);
@@ -167,6 +173,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(sharpenButton, &QPushButton::clicked, this, &MainWindow::applySharpenFilter);
     connect(edgeButton, &QPushButton::clicked, this, &MainWindow::applyEdgeDetectionFilter);
     connect(embossButton, &QPushButton::clicked, this, &MainWindow::applyEmbossFilter);
+
+    connect(medianButton, &QPushButton::clicked, this, &MainWindow::applyMedianFilter);
 
     connect(openFilterEditorButton, &QPushButton::clicked, this, &MainWindow::openFilterEditorDialog);
 
@@ -330,4 +338,14 @@ void MainWindow::openFilterEditorDialog()
         QImage newImage = ImageProcessor::applyConvolution(originalImage, kernel);
         updateFilteredImage(newImage); });
     dialog.exec();
+}
+
+void MainWindow::applyMedianFilter()
+{
+    if (originalImage.isNull())
+    {
+        QMessageBox::warning(this, "Error", "No image loaded.");
+        return;
+    }
+    updateFilteredImage(ImageProcessor::applyMedianFilter(filteredImage, medianSpinBox->value()));
 }

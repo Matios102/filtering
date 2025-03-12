@@ -111,3 +111,39 @@ QImage ImageProcessor::applyConvolution(const QImage &image, const Kernel &kerne
     }
     return result;
 }
+
+QImage ImageProcessor::applyMedianFilter(const QImage &image, int kernelSize)
+{
+    const int width = image.width();
+    const int height = image.height();
+    const int halfKernelSize = kernelSize / 2;
+    QImage result = image;
+
+    for (int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            QVector<int> redValues;
+            QVector<int> greenValues;
+            QVector<int> blueValues;
+            for (int ky = 0; ky < kernelSize; ++ky)
+            {
+                for (int kx = 0; kx < kernelSize; ++kx)
+                {
+                    int pixelX = qBound(0, x + kx - halfKernelSize, width - 1);
+                    int pixelY = qBound(0, y + ky - halfKernelSize, height - 1);
+                    QColor pixelColor = image.pixelColor(pixelX, pixelY);
+                    redValues.append(pixelColor.red());
+                    greenValues.append(pixelColor.green());
+                    blueValues.append(pixelColor.blue());
+                }
+            }
+            std::sort(redValues.begin(), redValues.end());
+            std::sort(greenValues.begin(), greenValues.end());
+            std::sort(blueValues.begin(), blueValues.end());
+            int medianIndex = redValues.size() / 2;
+            result.setPixelColor(x, y, QColor(redValues[medianIndex], greenValues[medianIndex], blueValues[medianIndex]));
+        }
+    }
+    return result;
+}
