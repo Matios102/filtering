@@ -16,6 +16,7 @@ public:
     static QImage applyMedianFilter(const QImage &image, int kernelSize);
 
     static QImage applyOrderedDithering(const QImage &image, int thresholdMapSize);
+    static QImage applyUniformQuantization(const QImage &image, int rLevels, int gLevels, int bLevels);
 };
 
 #endif // IMAGEPROCESSOR_H

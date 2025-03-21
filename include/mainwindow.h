@@ -38,6 +38,9 @@ private slots:
     void applyMedianFilter();
 
     void applyOrderedDithering();
+    void applyUniformQuantization();
+
+    void applySelectedConvolutionFilter();
 
 private:
     QLabel *originalImageLabel;
@@ -54,6 +57,12 @@ private:
 
     QSpinBox *medianSpinBox;
     QComboBox *orderedDitheringComboBox;
+
+    QComboBox *FilterSelector;
+
+    QSpinBox *rQuantSpinBox;
+    QSpinBox *gQuantSpinBox;
+    QSpinBox *bQuantSpinBox;
 
     void updateFilteredImage(const QImage &newImage);
     void openFilterEditorDialog();

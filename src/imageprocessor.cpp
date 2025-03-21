@@ -191,3 +191,30 @@ QImage ImageProcessor::applyOrderedDithering(const QImage &image, int thresholdM
 
     return result;
 }
+
+QImage ImageProcessor::applyUniformQuantization(const QImage &image, int rLevels, int gLevels, int bLevels)
+{
+    QImage result = image.convertToFormat(QImage::Format_RGB888);
+
+    auto quantize = [](int value, int levels) -> int {
+        if (levels <= 1) return 0;
+        int quant = (value * (levels - 1)) / 255;
+        return (quant * 255) / (levels - 1);
+    };
+
+    for (int y = 0; y < result.height(); ++y)
+    {
+        for (int x = 0; x < result.width(); ++x)
+        {
+            QColor color = result.pixelColor(x, y);
+
+            int r = quantize(color.red(), rLevels);
+            int g = quantize(color.green(), gLevels);
+            int b = quantize(color.blue(), bLevels);
+
+            result.setPixelColor(x, y, QColor(r, g, b));
+        }
+    }
+
+    return result;
+}
