@@ -10,6 +10,7 @@
 #include <QPixmap>
 #include <QImage>
 #include <QSpinBox>
+#include <QComboBox>
 #include "kernel.h"
 
 class MainWindow : public QMainWindow {
@@ -36,6 +37,8 @@ private slots:
     void applyEmbossFilter();
     void applyMedianFilter();
 
+    void applyOrderedDithering();
+
 private:
     QLabel *originalImageLabel;
     QLabel *filteredImageLabel;
@@ -50,6 +53,7 @@ private:
     Kernel embossKernel;
 
     QSpinBox *medianSpinBox;
+    QComboBox *orderedDitheringComboBox;
 
     void updateFilteredImage(const QImage &newImage);
     void openFilterEditorDialog();

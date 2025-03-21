@@ -14,6 +14,8 @@ public:
 
     static QImage applyConvolution(const QImage &image, const Kernel &kernel);
     static QImage applyMedianFilter(const QImage &image, int kernelSize);
+
+    static QImage applyOrderedDithering(const QImage &image, int thresholdMapSize);
 };
 
 #endif // IMAGEPROCESSOR_H

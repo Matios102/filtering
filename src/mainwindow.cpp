@@ -121,9 +121,17 @@ MainWindow::MainWindow(QWidget *parent)
     QPushButton *edgeButton = new QPushButton("Edge Detection", this);
     QPushButton *embossButton = new QPushButton("Emboss", this);
     QPushButton *medianButton = new QPushButton("Median Filter", this);
+    QPushButton *orderedDitheringButton = new QPushButton("Ordered Dithering", this);
     this->medianSpinBox = new QSpinBox(this);
     this->medianSpinBox->setRange(1, 15);
     this->medianSpinBox->setSingleStep(2);
+    this->orderedDitheringComboBox = new QComboBox(this);
+    QVector<int> orderedDitheringValues = {2, 3, 4, 6};
+    for (int value : orderedDitheringValues)
+    {
+        this->orderedDitheringComboBox->addItem(QString::number(value), value);
+    }
+
 
     QPushButton *openFilterEditorButton = new QPushButton("Custom filter", this);
 
@@ -150,6 +158,8 @@ MainWindow::MainWindow(QWidget *parent)
     filterLayout2->addWidget(embossButton);
     filterLayout2->addWidget(medianButton);
     filterLayout2->addWidget(medianSpinBox);
+    filterLayout2->addWidget(orderedDitheringButton);
+    filterLayout2->addWidget(orderedDitheringComboBox);
 
     mainLayout->addLayout(buttonLayout);
     mainLayout->addLayout(imageLayout);
@@ -175,6 +185,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(embossButton, &QPushButton::clicked, this, &MainWindow::applyEmbossFilter);
 
     connect(medianButton, &QPushButton::clicked, this, &MainWindow::applyMedianFilter);
+
+    connect(orderedDitheringButton, &QPushButton::clicked, this, &MainWindow::applyOrderedDithering);
 
     connect(openFilterEditorButton, &QPushButton::clicked, this, &MainWindow::openFilterEditorDialog);
 
@@ -348,4 +360,14 @@ void MainWindow::applyMedianFilter()
         return;
     }
     updateFilteredImage(ImageProcessor::applyMedianFilter(filteredImage, medianSpinBox->value()));
+}
+
+void MainWindow::applyOrderedDithering()
+{
+    if (originalImage.isNull())
+    {
+        QMessageBox::warning(this, "Error", "No image loaded.");
+        return;
+    }
+    updateFilteredImage(ImageProcessor::applyOrderedDithering(filteredImage, orderedDitheringComboBox->currentData().toInt()));
 }

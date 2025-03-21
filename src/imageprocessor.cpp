@@ -147,3 +147,47 @@ QImage ImageProcessor::applyMedianFilter(const QImage &image, int kernelSize)
     }
     return result;
 }
+
+QImage ImageProcessor::applyOrderedDithering(const QImage &image, int thresholdMapSize)
+{
+    const int k = DITHERING_QUANTIZATION_LEVEL;
+    QVector<QVector<int>> thresholdMap = getOrderedDitheringKernel(thresholdMapSize);
+    int thresholdDivisor = thresholdMapSize * thresholdMapSize;
+
+    QImage result(image.size(), QImage::Format_RGB888);
+
+    for (int y = 0; y < image.height(); ++y)
+    {
+        for (int x = 0; x < image.width(); ++x)
+        {
+            QColor color = image.pixelColor(x, y);
+
+            int tx = x % thresholdMapSize;
+            int ty = y % thresholdMapSize;
+            float thresholdNorm = thresholdMap[ty][tx] / float(thresholdDivisor);
+
+            auto ditherChannel = [&](int value) -> int
+            {
+                float normalized = value / 255.0f;
+                float scaled = normalized * k;
+                int base = int(scaled);
+                float frac = scaled - base;
+
+                int quantized = base;
+                if (frac > thresholdNorm)
+                    quantized += 1;
+
+                quantized = std::clamp(quantized, 0, k - 1);
+                return (quantized * 255) / (k - 1);
+            };
+
+            int r = ditherChannel(color.red());
+            int g = ditherChannel(color.green());
+            int b = ditherChannel(color.blue());
+
+            result.setPixelColor(x, y, QColor(r, g, b));
+        }
+    }
+
+    return result;
+}
