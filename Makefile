@@ -1458,6 +1458,8 @@ obj/mainwindow.o: src/mainwindow.cpp include/mainwindow.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/qlineedit.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/QMessageBox \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/qmessagebox.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QStackedWidget \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qstackedwidget.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/QScrollArea \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/qscrollarea.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/mainwindow.o src/mainwindow.cpp
