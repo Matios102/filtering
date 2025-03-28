@@ -51,7 +51,7 @@ The **Image Filter Application** is a desktop application built using Qt that al
 ### Steps
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Matios102/filtering
    cd filtering
    ```
 2. Build the project:
