@@ -1296,6 +1296,10 @@ obj/moc_mainwindow.cpp: include/mainwindow.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/qpixmap.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/QImage \
 		/opt/homebrew/lib/QtGui.framework/Headers/qimage.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QSpinBox \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qspinbox.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QComboBox \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qcombobox.h \
 		include/kernel.h \
 		/opt/homebrew/lib/QtCore.framework/Headers/QVector \
 		/opt/homebrew/lib/QtCore.framework/Headers/qvector.h \
@@ -1344,6 +1348,10 @@ obj/main.o: main.cpp include/mainwindow.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/qpixmap.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/QImage \
 		/opt/homebrew/lib/QtGui.framework/Headers/qimage.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QSpinBox \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qspinbox.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QComboBox \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qcombobox.h \
 		include/kernel.h \
 		/opt/homebrew/lib/QtCore.framework/Headers/QVector \
 		/opt/homebrew/lib/QtCore.framework/Headers/qvector.h \
@@ -1430,6 +1438,10 @@ obj/mainwindow.o: src/mainwindow.cpp include/mainwindow.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/qpixmap.h \
 		/opt/homebrew/lib/QtGui.framework/Headers/QImage \
 		/opt/homebrew/lib/QtGui.framework/Headers/qimage.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QSpinBox \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qspinbox.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QComboBox \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qcombobox.h \
 		include/kernel.h \
 		/opt/homebrew/lib/QtCore.framework/Headers/QVector \
 		/opt/homebrew/lib/QtCore.framework/Headers/qvector.h \
@@ -1442,12 +1454,12 @@ obj/mainwindow.o: src/mainwindow.cpp include/mainwindow.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/qdialog.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/QTableWidget \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/qtablewidget.h \
-		/opt/homebrew/lib/QtWidgets.framework/Headers/QSpinBox \
-		/opt/homebrew/lib/QtWidgets.framework/Headers/qspinbox.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/QLineEdit \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/qlineedit.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/QMessageBox \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/qmessagebox.h \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/QStackedWidget \
+		/opt/homebrew/lib/QtWidgets.framework/Headers/qstackedwidget.h \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/QScrollArea \
 		/opt/homebrew/lib/QtWidgets.framework/Headers/qscrollarea.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/mainwindow.o src/mainwindow.cpp

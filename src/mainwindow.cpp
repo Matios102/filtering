@@ -3,6 +3,7 @@
 #include "filterconstants.h"
 #include "filtereditordialog.h"
 #include <QMessageBox>
+#include <QStackedWidget>
 #include <iostream>
 #include <QScrollArea>
 
@@ -79,13 +80,10 @@ MainWindow::MainWindow(QWidget *parent)
         embossKernel = Kernel(rows, cols, kernel, BLUR_DIVISOR, BLUR_OFFSET, BLUR_ANCHOR_X, BLUR_ANCHOR_Y);
     }
 
-
-    originalImageLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+    // --- Image view setup ---
     originalImageLabel->setAlignment(Qt::AlignCenter);
     originalImageLabel->setMinimumSize(100, 100);
     originalImageLabel->setMaximumSize(500, 500);
-
-    filteredImageLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     filteredImageLabel->setAlignment(Qt::AlignCenter);
     filteredImageLabel->setMinimumSize(100, 100);
     filteredImageLabel->setMaximumSize(500, 500);
@@ -94,92 +92,135 @@ MainWindow::MainWindow(QWidget *parent)
     originalImageScrollArea->setWidget(originalImageLabel);
     originalImageScrollArea->setWidgetResizable(true);
     originalImageScrollArea->setFixedSize(500, 500);
-    
-    
+
     QScrollArea *filteredImageScrollArea = new QScrollArea(this);
     filteredImageScrollArea->setWidget(filteredImageLabel);
     filteredImageScrollArea->setWidgetResizable(true);
     filteredImageScrollArea->setFixedSize(500, 500);
 
-
-
+    // --- Core layout setup ---
     QWidget *centralWidget = new QWidget(this);
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
 
+    // Top row: Load / Save / Reset
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
     QPushButton *loadButton = new QPushButton("Load Image", this);
     QPushButton *saveButton = new QPushButton("Save Image", this);
     QPushButton *resetButton = new QPushButton("Reset Image", this);
-
-    QPushButton *invertButton = new QPushButton("Invert Colors", this);
-    QPushButton *brightnessButton = new QPushButton("Brightness " + QString::number(BRIGHTNESS_ADJUSTMENT), this);
-    QPushButton *contrastButton = new QPushButton("Contrast " + QString::number(CONTRAST_ADJUSTMENT), this);
-    QPushButton *gammaButton = new QPushButton("Gamma " + QString::number(GAMMA_CORRECTION), this);
-
-    QPushButton *blurButton = new QPushButton("Blur", this);
-    QPushButton *gaussianBlurButton = new QPushButton("Gaussian Blur", this);
-    QPushButton *sharpenButton = new QPushButton("Sharpen", this);
-    QPushButton *edgeButton = new QPushButton("Edge Detection", this);
-    QPushButton *embossButton = new QPushButton("Emboss", this);
-    QPushButton *medianButton = new QPushButton("Median Filter", this);
-    this->medianSpinBox = new QSpinBox(this);
-    this->medianSpinBox->setRange(1, 15);
-    this->medianSpinBox->setSingleStep(2);
-
-    QPushButton *openFilterEditorButton = new QPushButton("Custom filter", this);
-
-    QHBoxLayout *imageLayout = new QHBoxLayout();
-    imageLayout->addWidget(originalImageScrollArea);
-    imageLayout->addWidget(filteredImageScrollArea);
-
-    QHBoxLayout *buttonLayout = new QHBoxLayout();
     buttonLayout->addWidget(loadButton);
     buttonLayout->addWidget(saveButton);
     buttonLayout->addWidget(resetButton);
 
+    // --- Image display ---
+    QHBoxLayout *imageLayout = new QHBoxLayout();
+    imageLayout->addWidget(originalImageScrollArea);
+    imageLayout->addWidget(filteredImageScrollArea);
+
+    // --- Functional filters  ---
     QHBoxLayout *filterLayout1 = new QHBoxLayout();
+    QPushButton *invertButton = new QPushButton("Invert Colors", this);
+    QPushButton *brightnessButton = new QPushButton("Brightness " + QString::number(BRIGHTNESS_ADJUSTMENT), this);
+    QPushButton *contrastButton = new QPushButton("Contrast " + QString::number(CONTRAST_ADJUSTMENT), this);
+    QPushButton *gammaButton = new QPushButton("Gamma " + QString::number(GAMMA_CORRECTION), this);
+    QPushButton *greyScaleButton = new QPushButton("Greyscale", this);
     filterLayout1->addWidget(invertButton);
     filterLayout1->addWidget(brightnessButton);
     filterLayout1->addWidget(contrastButton);
     filterLayout1->addWidget(gammaButton);
+    filterLayout1->addWidget(greyScaleButton);
 
-    QHBoxLayout *filterLayout2 = new QHBoxLayout();
-    filterLayout2->addWidget(blurButton);
-    filterLayout2->addWidget(gaussianBlurButton);
-    filterLayout2->addWidget(sharpenButton);
-    filterLayout2->addWidget(edgeButton);
-    filterLayout2->addWidget(embossButton);
-    filterLayout2->addWidget(medianButton);
-    filterLayout2->addWidget(medianSpinBox);
+    // --- Convolution filter section ---
+    QHBoxLayout *convolutionLayout = new QHBoxLayout();
+    FilterSelector = new QComboBox(this);
+    FilterSelector->addItem("None");                 // Page 0
+    FilterSelector->addItem("Blur");                 // Page 1
+    FilterSelector->addItem("Gaussian Blur");        // Page 2
+    FilterSelector->addItem("Sharpen");              // Page 3
+    FilterSelector->addItem("Edge Detection");       // Page 4
+    FilterSelector->addItem("Emboss");               // Page 5
+    FilterSelector->addItem("Median Filter");        // Page 6
+    FilterSelector->addItem("Ordered Dithering");    // Page 7
+    FilterSelector->addItem("Uniform Quantization"); // Page 8
 
+    QStackedWidget *convolutionFilterConfigStack = new QStackedWidget(this);
+
+    // Pages 0-5: No config needed
+    for (int i = 0; i < 6; ++i)
+        convolutionFilterConfigStack->addWidget(new QWidget());
+
+    // Page 6: Median filter config
+    QWidget *medianWidget = new QWidget();
+    QHBoxLayout *medianLayout = new QHBoxLayout(medianWidget);
+    medianSpinBox = new QSpinBox(this);
+    medianSpinBox->setRange(1, 15);
+    medianSpinBox->setSingleStep(2);
+    medianLayout->addWidget(new QLabel("Kernel Size:"));
+    medianLayout->addWidget(medianSpinBox);
+    convolutionFilterConfigStack->addWidget(medianWidget);
+
+    // Page 7: Ordered dithering config
+    QWidget *ditheringWidget = new QWidget();
+    QHBoxLayout *ditheringLayout = new QHBoxLayout(ditheringWidget);
+    orderedDitheringComboBox = new QComboBox(this);
+    for (int v : QVector<int>{2, 3, 4, 6})
+        orderedDitheringComboBox->addItem(QString::number(v), v);
+    ditheringLayout->addWidget(new QLabel("Threshold Map Size:"));
+    ditheringLayout->addWidget(orderedDitheringComboBox);
+    convolutionFilterConfigStack->addWidget(ditheringWidget);
+
+    // Page 8: Uniform quantization config
+    QWidget *quantizationWidget = new QWidget();
+    QHBoxLayout *quantizationLayout = new QHBoxLayout(quantizationWidget);
+    rQuantSpinBox = new QSpinBox(this);
+    gQuantSpinBox = new QSpinBox(this);
+    bQuantSpinBox = new QSpinBox(this);
+    for (QSpinBox *box : {rQuantSpinBox, gQuantSpinBox, bQuantSpinBox})
+    {
+        box->setRange(2, 32);
+        box->setValue(4);
+    }
+    quantizationLayout->addWidget(new QLabel("R:", this));
+    quantizationLayout->addWidget(rQuantSpinBox);
+    quantizationLayout->addWidget(new QLabel("G:", this));
+    quantizationLayout->addWidget(gQuantSpinBox);
+    quantizationLayout->addWidget(new QLabel("B:", this));
+    quantizationLayout->addWidget(bQuantSpinBox);
+    convolutionFilterConfigStack->addWidget(quantizationWidget);
+
+    QPushButton *applyConvolutionButton = new QPushButton("Apply Filter", this);
+    connect(FilterSelector, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            convolutionFilterConfigStack, &QStackedWidget::setCurrentIndex);
+    connect(applyConvolutionButton, &QPushButton::clicked, this, &MainWindow::applySelectedConvolutionFilter);
+
+    convolutionLayout->addWidget(FilterSelector);
+    convolutionLayout->addWidget(convolutionFilterConfigStack);
+    convolutionLayout->addWidget(applyConvolutionButton);
+
+    QPushButton *openFilterEditorButton = new QPushButton("Custom Filter", this);
+
+    // --- Assembling final layout ---
     mainLayout->addLayout(buttonLayout);
     mainLayout->addLayout(imageLayout);
     mainLayout->addLayout(filterLayout1);
-    mainLayout->addLayout(filterLayout2);
+    mainLayout->addLayout(convolutionLayout);
+    mainLayout->addLayout(ditheringLayout);
     mainLayout->addWidget(openFilterEditorButton);
 
     setCentralWidget(centralWidget);
+    setWindowTitle("Image Filter Application");
 
+    // --- Connections ---
     connect(loadButton, &QPushButton::clicked, this, &MainWindow::loadImage);
     connect(saveButton, &QPushButton::clicked, this, &MainWindow::saveImage);
     connect(resetButton, &QPushButton::clicked, this, &MainWindow::resetImage);
-
     connect(invertButton, &QPushButton::clicked, this, &MainWindow::applyInversionFilter);
     connect(brightnessButton, &QPushButton::clicked, this, &MainWindow::applyBrightnessFilter);
     connect(contrastButton, &QPushButton::clicked, this, &MainWindow::applyContrastFilter);
     connect(gammaButton, &QPushButton::clicked, this, &MainWindow::applyGammaCorrectionFilter);
-
-    connect(blurButton, &QPushButton::clicked, this, &MainWindow::applyBlurFilter);
-    connect(gaussianBlurButton, &QPushButton::clicked, this, &MainWindow::applyGaussianBlurFilter);
-    connect(sharpenButton, &QPushButton::clicked, this, &MainWindow::applySharpenFilter);
-    connect(edgeButton, &QPushButton::clicked, this, &MainWindow::applyEdgeDetectionFilter);
-    connect(embossButton, &QPushButton::clicked, this, &MainWindow::applyEmbossFilter);
-
-    connect(medianButton, &QPushButton::clicked, this, &MainWindow::applyMedianFilter);
-
     connect(openFilterEditorButton, &QPushButton::clicked, this, &MainWindow::openFilterEditorDialog);
+    connect(greyScaleButton, &QPushButton::clicked, this, &MainWindow::applyGreyscaleFilter);
 
     adjustSize();
-    setWindowTitle("Image Filter Application");
 }
 
 MainWindow::~MainWindow() {}
@@ -348,4 +389,74 @@ void MainWindow::applyMedianFilter()
         return;
     }
     updateFilteredImage(ImageProcessor::applyMedianFilter(filteredImage, medianSpinBox->value()));
+}
+
+void MainWindow::applyOrderedDithering()
+{
+    if (originalImage.isNull())
+    {
+        QMessageBox::warning(this, "Error", "No image loaded.");
+        return;
+    }
+    updateFilteredImage(ImageProcessor::applyOrderedDithering(filteredImage, orderedDitheringComboBox->currentData().toInt()));
+}
+
+void MainWindow::applyUniformQuantization()
+{
+    if (originalImage.isNull())
+    {
+        QMessageBox::warning(this, "Error", "No image loaded.");
+        return;
+    }
+    updateFilteredImage(ImageProcessor::applyUniformQuantization(filteredImage, rQuantSpinBox->value(), gQuantSpinBox->value(), bQuantSpinBox->value()));
+}
+
+void MainWindow::applySelectedConvolutionFilter()
+{
+    if (originalImage.isNull())
+    {
+        QMessageBox::warning(this, "Error", "No image loaded.");
+        return;
+    }
+
+    int index = FilterSelector->currentIndex();
+    switch (index)
+    {
+    case 1:
+        applyBlurFilter();
+        break;
+    case 2:
+        applyGaussianBlurFilter();
+        break;
+    case 3:
+        applySharpenFilter();
+        break;
+    case 4:
+        applyEdgeDetectionFilter();
+        break;
+    case 5:
+        applyEmbossFilter();
+        break;
+    case 6:
+        applyMedianFilter();
+        break;
+    case 7:
+        applyOrderedDithering();
+        break;
+    case 8:
+        applyUniformQuantization();
+        break;
+    default:
+        break;
+    }
+}
+
+void MainWindow::applyGreyscaleFilter()
+{
+    if (originalImage.isNull())
+    {
+        QMessageBox::warning(this, "Error", "No image loaded.");
+        return;
+    }
+    updateFilteredImage(ImageProcessor::applyGreyscaleFilter(filteredImage));
 }

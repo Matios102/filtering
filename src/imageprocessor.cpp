@@ -1,6 +1,7 @@
 #include "imageprocessor.h"
 #include "filterconstants.h"
 #include <QtMath>
+#include <iostream>
 
 QImage ImageProcessor::invertColors(const QImage &image)
 {
@@ -145,5 +146,113 @@ QImage ImageProcessor::applyMedianFilter(const QImage &image, int kernelSize)
             result.setPixelColor(x, y, QColor(redValues[medianIndex], greenValues[medianIndex], blueValues[medianIndex]));
         }
     }
+    return result;
+}
+
+QImage ImageProcessor::applyOrderedDithering(const QImage &image, int thresholdMapSize)
+{
+    const int k = DITHERING_QUANTIZATION_LEVEL;
+    QVector<QVector<int>> thresholdMap = getOrderedDitheringKernel(thresholdMapSize);
+    int thresholdDivisor = thresholdMapSize * thresholdMapSize;
+
+    QImage result(image.size(), image.format());
+
+    if (image.format() == QImage::Format_Grayscale8)
+    {
+        for (int y = 0; y < image.height(); ++y)
+        {
+            for (int x = 0; x < image.width(); ++x)
+            {
+                int gray = qGray(image.pixel(x, y));
+
+                int tx = x % thresholdMapSize;
+                int ty = y % thresholdMapSize;
+                float thresholdNorm = thresholdMap[ty][tx] / float(thresholdDivisor);
+
+                float normalized = gray / 255.0f;
+                float scaled = normalized * k;
+                int base = int(scaled);
+                float frac = scaled - base;
+
+                int quantized = base;
+                if (frac > thresholdNorm)
+                    quantized += 1;
+
+                quantized = std::clamp(quantized, 0, k - 1);
+                int ditheredGray = (quantized * 255) / (k - 1);
+
+                result.setPixel(x, y, qRgb(ditheredGray, ditheredGray, ditheredGray));
+            }
+        }
+    }
+    else
+    {
+        for (int y = 0; y < image.height(); ++y)
+        {
+            for (int x = 0; x < image.width(); ++x)
+            {
+                QColor color = image.pixelColor(x, y);
+
+                int tx = x % thresholdMapSize;
+                int ty = y % thresholdMapSize;
+                float thresholdNorm = thresholdMap[ty][tx] / float(thresholdDivisor);
+
+                auto ditherChannel = [&](int value) -> int
+                {
+                    float normalized = value / 255.0f;
+                    float scaled = normalized * k;
+                    int base = int(scaled);
+                    float frac = scaled - base;
+
+                    int quantized = base;
+                    if (frac > thresholdNorm)
+                        quantized += 1;
+
+                    quantized = std::clamp(quantized, 0, k - 1);
+                    return (quantized * 255) / (k - 1);
+                };
+
+                int r = ditherChannel(color.red());
+                int g = ditherChannel(color.green());
+                int b = ditherChannel(color.blue());
+
+                result.setPixelColor(x, y, QColor(r, g, b));
+            }
+        }
+    }
+
+    return result;
+}
+
+QImage ImageProcessor::applyUniformQuantization(const QImage &image, int rLevels, int gLevels, int bLevels)
+{
+    QImage result = image.convertToFormat(QImage::Format_RGB888);
+
+    auto quantize = [](int value, int levels) -> int {
+        if (levels <= 1) return 0;
+        int quant = (value * (levels - 1)) / 255;
+        return (quant * 255) / (levels - 1);
+    };
+
+    for (int y = 0; y < result.height(); ++y)
+    {
+        for (int x = 0; x < result.width(); ++x)
+        {
+            QColor color = result.pixelColor(x, y);
+
+            int r = quantize(color.red(), rLevels);
+            int g = quantize(color.green(), gLevels);
+            int b = quantize(color.blue(), bLevels);
+
+            result.setPixelColor(x, y, QColor(r, g, b));
+        }
+    }
+
+    return result;
+}
+
+QImage ImageProcessor::applyGreyscaleFilter(const QImage &image)
+{
+    QImage result = image.convertToFormat(QImage::Format_Grayscale8);
     return result;
 }

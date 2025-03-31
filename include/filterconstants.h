@@ -59,6 +59,49 @@ inline QVector<QVector<int>> getEmbossKernel()
         {0, 1, 2}};
 }
 
+inline QVector<QVector<int>> getOrderedDitheringKernel(int thresholdMapSize)
+{
+    if (thresholdMapSize == 2)
+    {
+        return {
+            {  0, 170 },
+            {255,  85 }
+        };
+    }
+    else if (thresholdMapSize == 3)
+    {
+        return {
+            {204, 238, 170},
+            { 68,   0, 102},
+            {187,  34, 221}
+        };
+    }
+    else if (thresholdMapSize == 4)
+    {
+        return {
+            {  0, 136,  34, 170},
+            {204,  68, 238, 102},
+            { 51, 187,  17, 153},
+            {255, 119, 221,  85}
+        };
+    }
+    else if (thresholdMapSize == 6)
+    {
+        return {
+            {  0, 136,  34, 170,  8, 144},
+            {204,  68, 238, 102, 212,  76},
+            { 51, 187,  17, 153,  59, 195},
+            {255, 119, 221,  85, 247, 111},
+            { 12, 148,  42, 178,  20, 156},
+            {216,  80, 230,  94, 224,  88}
+        };
+    }
+
+    return {};
+}
+
+
+
 // Kernel Constants
 const int BLUR_DIVISOR = 9;
 const int BLUR_OFFSET = 0;
@@ -84,5 +127,7 @@ const int EMBOSS_DIVISOR = 1;
 const int EMBOSS_OFFSET = 128;
 const int EMBOSS_ANCHOR_X = 1;
 const int EMBOSS_ANCHOR_Y = 1;
+
+const int DITHERING_QUANTIZATION_LEVEL = 4;
 
 #endif // FILTERCONSTANTS_H
