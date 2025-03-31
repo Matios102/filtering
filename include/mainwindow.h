@@ -42,6 +42,8 @@ private slots:
 
     void applySelectedConvolutionFilter();
 
+    void applyGreyscaleFilter();
+
 private:
     QLabel *originalImageLabel;
     QLabel *filteredImageLabel;

@@ -1,6 +1,7 @@
 #include "imageprocessor.h"
 #include "filterconstants.h"
 #include <QtMath>
+#include <iostream>
 
 QImage ImageProcessor::invertColors(const QImage &image)
 {
@@ -154,21 +155,21 @@ QImage ImageProcessor::applyOrderedDithering(const QImage &image, int thresholdM
     QVector<QVector<int>> thresholdMap = getOrderedDitheringKernel(thresholdMapSize);
     int thresholdDivisor = thresholdMapSize * thresholdMapSize;
 
-    QImage result(image.size(), QImage::Format_RGB888);
+    QImage result(image.size(), image.format());
 
-    for (int y = 0; y < image.height(); ++y)
+    if (image.format() == QImage::Format_Grayscale8)
     {
-        for (int x = 0; x < image.width(); ++x)
+        for (int y = 0; y < image.height(); ++y)
         {
-            QColor color = image.pixelColor(x, y);
-
-            int tx = x % thresholdMapSize;
-            int ty = y % thresholdMapSize;
-            float thresholdNorm = thresholdMap[ty][tx] / float(thresholdDivisor);
-
-            auto ditherChannel = [&](int value) -> int
+            for (int x = 0; x < image.width(); ++x)
             {
-                float normalized = value / 255.0f;
+                int gray = qGray(image.pixel(x, y));
+
+                int tx = x % thresholdMapSize;
+                int ty = y % thresholdMapSize;
+                float thresholdNorm = thresholdMap[ty][tx] / float(thresholdDivisor);
+
+                float normalized = gray / 255.0f;
                 float scaled = normalized * k;
                 int base = int(scaled);
                 float frac = scaled - base;
@@ -178,14 +179,45 @@ QImage ImageProcessor::applyOrderedDithering(const QImage &image, int thresholdM
                     quantized += 1;
 
                 quantized = std::clamp(quantized, 0, k - 1);
-                return (quantized * 255) / (k - 1);
-            };
+                int ditheredGray = (quantized * 255) / (k - 1);
 
-            int r = ditherChannel(color.red());
-            int g = ditherChannel(color.green());
-            int b = ditherChannel(color.blue());
+                result.setPixel(x, y, qRgb(ditheredGray, ditheredGray, ditheredGray));
+            }
+        }
+    }
+    else
+    {
+        for (int y = 0; y < image.height(); ++y)
+        {
+            for (int x = 0; x < image.width(); ++x)
+            {
+                QColor color = image.pixelColor(x, y);
 
-            result.setPixelColor(x, y, QColor(r, g, b));
+                int tx = x % thresholdMapSize;
+                int ty = y % thresholdMapSize;
+                float thresholdNorm = thresholdMap[ty][tx] / float(thresholdDivisor);
+
+                auto ditherChannel = [&](int value) -> int
+                {
+                    float normalized = value / 255.0f;
+                    float scaled = normalized * k;
+                    int base = int(scaled);
+                    float frac = scaled - base;
+
+                    int quantized = base;
+                    if (frac > thresholdNorm)
+                        quantized += 1;
+
+                    quantized = std::clamp(quantized, 0, k - 1);
+                    return (quantized * 255) / (k - 1);
+                };
+
+                int r = ditherChannel(color.red());
+                int g = ditherChannel(color.green());
+                int b = ditherChannel(color.blue());
+
+                result.setPixelColor(x, y, QColor(r, g, b));
+            }
         }
     }
 
@@ -216,5 +248,11 @@ QImage ImageProcessor::applyUniformQuantization(const QImage &image, int rLevels
         }
     }
 
+    return result;
+}
+
+QImage ImageProcessor::applyGreyscaleFilter(const QImage &image)
+{
+    QImage result = image.convertToFormat(QImage::Format_Grayscale8);
     return result;
 }
