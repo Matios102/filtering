@@ -153,7 +153,7 @@ QImage ImageProcessor::applyOrderedDithering(const QImage &image, int thresholdM
 {
     const int k = DITHERING_QUANTIZATION_LEVEL;
     QVector<QVector<int>> thresholdMap = getOrderedDitheringKernel(thresholdMapSize);
-    int thresholdDivisor = thresholdMapSize * thresholdMapSize;
+    int thresholdDivisor = thresholdMapSize * thresholdMapSize + 1;
 
     QImage result(image.size(), image.format());
 
@@ -170,12 +170,12 @@ QImage ImageProcessor::applyOrderedDithering(const QImage &image, int thresholdM
                 float thresholdNorm = thresholdMap[ty][tx] / float(thresholdDivisor);
 
                 float normalized = gray / 255.0f;
-                float scaled = normalized * k;
+                float scaled = normalized * (k - 1);
                 int base = int(scaled);
-                float frac = scaled - base;
+                float residual = scaled - base;
 
                 int quantized = base;
-                if (frac > thresholdNorm)
+                if (residual >= thresholdNorm)
                     quantized += 1;
 
                 quantized = std::clamp(quantized, 0, k - 1);
@@ -200,12 +200,12 @@ QImage ImageProcessor::applyOrderedDithering(const QImage &image, int thresholdM
                 auto ditherChannel = [&](int value) -> int
                 {
                     float normalized = value / 255.0f;
-                    float scaled = normalized * k;
+                    float scaled = normalized * (k - 1);
                     int base = int(scaled);
                     float frac = scaled - base;
 
                     int quantized = base;
-                    if (frac > thresholdNorm)
+                    if (frac >= thresholdNorm)
                         quantized += 1;
 
                     quantized = std::clamp(quantized, 0, k - 1);
