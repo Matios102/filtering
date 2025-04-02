@@ -2,6 +2,8 @@
 #include "filterconstants.h"
 #include <QtMath>
 #include <iostream>
+#include <QtGui/QImage>
+#include <QtGui/QColor>
 
 QImage ImageProcessor::invertColors(const QImage &image)
 {
@@ -149,9 +151,8 @@ QImage ImageProcessor::applyMedianFilter(const QImage &image, int kernelSize)
     return result;
 }
 
-QImage ImageProcessor::applyOrderedDithering(const QImage &image, int thresholdMapSize)
+QImage ImageProcessor::applyOrderedDithering(const QImage &image, int thresholdMapSize, int k)
 {
-    const int k = DITHERING_QUANTIZATION_LEVEL;
     QVector<QVector<int>> thresholdMap = getOrderedDitheringKernel(thresholdMapSize);
     int thresholdDivisor = thresholdMapSize * thresholdMapSize + 1;
 
@@ -228,8 +229,10 @@ QImage ImageProcessor::applyUniformQuantization(const QImage &image, int rLevels
 {
     QImage result = image.convertToFormat(QImage::Format_RGB888);
 
-    auto quantize = [](int value, int levels) -> int {
-        if (levels <= 1) return 0;
+    auto quantize = [](int value, int levels) -> int
+    {
+        if (levels <= 1)
+            return 0;
         int quant = (value * (levels - 1)) / 255;
         return (quant * 255) / (levels - 1);
     };
@@ -255,4 +258,154 @@ QImage ImageProcessor::applyGreyscaleFilter(const QImage &image)
 {
     QImage result = image.convertToFormat(QImage::Format_Grayscale8);
     return result;
+}
+
+QImage ImageProcessor::convertToHSV(const QImage &image)
+{
+    QImage hsvImage(image.size(), QImage::Format_ARGB32);
+    for (int y = 0; y < image.height(); ++y)
+    {
+        for (int x = 0; x < image.width(); ++x)
+        {
+            QColor color = image.pixelColor(x, y);
+            int r = color.red();
+            int g = color.green();
+            int b = color.blue();
+
+            double rNorm = r / 255.0;
+            double gNorm = g / 255.0;
+            double bNorm = b / 255.0;
+
+            double max = std::max({rNorm, gNorm, bNorm});
+            double min = std::min({rNorm, gNorm, bNorm});
+            double delta = max - min;
+
+            double h = 0, s = 0, v = max;
+
+            if (delta > 0)
+            {
+                if (max == rNorm)
+                {
+                    h = fmod((gNorm - bNorm) / delta, 6);
+                }
+                else if (max == gNorm)
+                {
+                    h = (bNorm - rNorm) / delta + 2;
+                }
+                else if (max == bNorm)
+                {
+                    h = (rNorm - gNorm) / delta + 4;
+                }
+                h *= 60;
+                if (h < 0)
+                {
+                    h += 360;
+                }
+                s = delta / max;
+            }
+
+            hsvImage.setPixelColor(x, y, QColor(static_cast<int>(h / 360.0 * 255), static_cast<int>(s * 255), static_cast<int>(v * 255)));
+        }
+    }
+    return hsvImage;
+}
+
+QImage ImageProcessor::extractChannel(const QImage &hsvImage, ImageProcessor::Channel channel)
+{
+    QImage channelImage(hsvImage.size(), QImage::Format_Grayscale8);
+    for (int y = 0; y < hsvImage.height(); ++y)
+    {
+        for (int x = 0; x < hsvImage.width(); ++x)
+        {
+            QColor color = hsvImage.pixelColor(x, y);
+            int value = 0;
+            switch (channel)
+            {
+            case Channel::H:
+                value = color.red();
+                break;
+            case Channel::S:
+                value = color.green();
+                break;
+            case Channel::V:
+                value = color.blue();
+                break;
+            }
+            channelImage.setPixel(x, y, qRgb(value, value, value));
+        }
+    }
+    return channelImage;
+}
+
+QImage ImageProcessor::convertHSVToRGB(const QImage &hChannel, const QImage &sChannel, const QImage &vChannel)
+{
+    QImage rgbImage(hChannel.size(), QImage::Format_ARGB32);
+
+    for (int y = 0; y < hChannel.height(); ++y)
+    {
+        for (int x = 0; x < hChannel.width(); ++x)
+        {
+            int h = qGray(hChannel.pixel(x, y));
+            int s = qGray(sChannel.pixel(x, y));
+            int v = qGray(vChannel.pixel(x, y));
+
+            double hNorm = h / 255.0 * 360.0;
+            double sNorm = s / 255.0;
+            double vNorm = v / 255.0;
+
+            double hh = hNorm / 60.0;
+            int i = static_cast<int>(hh) % 6;
+            double f = hh - i;
+
+            double p = vNorm * (1 - sNorm);
+            double q = vNorm * (1 - f * sNorm);
+            double t = vNorm * (1 - (1 - f) * sNorm);
+
+            double rNorm = 0, gNorm = 0, bNorm = 0;
+
+            switch (i)
+            {
+            case 0:
+                rNorm = vNorm;
+                gNorm = t;
+                bNorm = p;
+                break;
+            case 1:
+                rNorm = q;
+                gNorm = vNorm;
+                bNorm = p;
+                break;
+            case 2:
+                rNorm = p;
+                gNorm = vNorm;
+                bNorm = t;
+                break;
+            case 3:
+                rNorm = p;
+                gNorm = q;
+                bNorm = vNorm;
+                break;
+            case 4:
+                rNorm = t;
+                gNorm = p;
+                bNorm = vNorm;
+                break;
+            case 5:
+                rNorm = vNorm;
+                gNorm = p;
+                bNorm = q;
+                break;
+            default:
+                break;
+            }
+
+            int r = qBound(0, static_cast<int>(rNorm * 255), 255);
+            int g = qBound(0, static_cast<int>(gNorm * 255), 255);
+            int b = qBound(0, static_cast<int>(bNorm * 255), 255);
+
+            rgbImage.setPixelColor(x, y, QColor(r, g, b));
+        }
+    }
+
+    return rgbImage;
 }
