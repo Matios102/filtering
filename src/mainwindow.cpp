@@ -203,7 +203,6 @@ MainWindow::MainWindow(QWidget *parent)
     mainLayout->addLayout(imageLayout);
     mainLayout->addLayout(filterLayout1);
     mainLayout->addLayout(convolutionLayout);
-    mainLayout->addLayout(ditheringLayout);
     mainLayout->addWidget(openFilterEditorButton);
 
     setCentralWidget(centralWidget);
