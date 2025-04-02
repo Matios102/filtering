@@ -8,7 +8,8 @@
 #include <QScrollArea>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), originalImageLabel(new QLabel(this)), filteredImageLabel(new QLabel(this))
+    : QMainWindow(parent), originalImageLabel(new QLabel(this)), filteredImageLabel(new QLabel(this)), HfilteredImageLabel(new QLabel(this)),
+      VfilteredImageLabel(new QLabel(this)), SfilteredImageLabel(new QLabel(this)), RGBfilteredImageLabel(new QLabel(this))
 {
     try
     {
@@ -88,6 +89,20 @@ MainWindow::MainWindow(QWidget *parent)
     filteredImageLabel->setMinimumSize(100, 100);
     filteredImageLabel->setMaximumSize(500, 500);
 
+    // --- Small image view setup ---
+    HfilteredImageLabel->setAlignment(Qt::AlignCenter);
+    HfilteredImageLabel->setMinimumSize(100, 100);
+    HfilteredImageLabel->setMaximumSize(500, 500);
+    VfilteredImageLabel->setAlignment(Qt::AlignCenter);
+    VfilteredImageLabel->setMinimumSize(100, 100);
+    VfilteredImageLabel->setMaximumSize(500, 500);
+    SfilteredImageLabel->setAlignment(Qt::AlignCenter);
+    SfilteredImageLabel->setMinimumSize(100, 100);
+    SfilteredImageLabel->setMaximumSize(500, 500);
+    RGBfilteredImageLabel->setAlignment(Qt::AlignCenter);
+    RGBfilteredImageLabel->setMinimumSize(100, 100);
+    RGBfilteredImageLabel->setMaximumSize(500, 500);
+
     QScrollArea *originalImageScrollArea = new QScrollArea(this);
     originalImageScrollArea->setWidget(originalImageLabel);
     originalImageScrollArea->setWidgetResizable(true);
@@ -115,6 +130,13 @@ MainWindow::MainWindow(QWidget *parent)
     QHBoxLayout *imageLayout = new QHBoxLayout();
     imageLayout->addWidget(originalImageScrollArea);
     imageLayout->addWidget(filteredImageScrollArea);
+
+    // Small image display
+    QHBoxLayout *smallImageLayout = new QHBoxLayout();
+    smallImageLayout->addWidget(HfilteredImageLabel);
+    smallImageLayout->addWidget(VfilteredImageLabel);
+    smallImageLayout->addWidget(SfilteredImageLabel);
+    smallImageLayout->addWidget(RGBfilteredImageLabel);
 
     // --- Functional filters  ---
     QHBoxLayout *filterLayout1 = new QHBoxLayout();
@@ -166,6 +188,10 @@ MainWindow::MainWindow(QWidget *parent)
         orderedDitheringComboBox->addItem(QString::number(v), v);
     ditheringLayout->addWidget(new QLabel("Threshold Map Size:"));
     ditheringLayout->addWidget(orderedDitheringComboBox);
+    ditheringQuantizationSpinBox = new QSpinBox(this);
+    ditheringQuantizationSpinBox->setRange(2, 32);
+    ditheringLayout->addWidget(new QLabel("Quantization Levels:"));
+    ditheringLayout->addWidget(ditheringQuantizationSpinBox);
     convolutionFilterConfigStack->addWidget(ditheringWidget);
 
     // Page 8: Uniform quantization config
@@ -201,6 +227,7 @@ MainWindow::MainWindow(QWidget *parent)
     // --- Assembling final layout ---
     mainLayout->addLayout(buttonLayout);
     mainLayout->addLayout(imageLayout);
+    mainLayout->addLayout(smallImageLayout);
     mainLayout->addLayout(filterLayout1);
     mainLayout->addLayout(convolutionLayout);
     mainLayout->addWidget(openFilterEditorButton);
@@ -238,6 +265,8 @@ void MainWindow::loadImage()
 
         originalImageLabel->setFixedSize(originalPixmap.size());
         filteredImageLabel->setFixedSize(originalPixmap.size());
+
+        applyHSVFilter();
     }
 }
 
@@ -397,7 +426,7 @@ void MainWindow::applyOrderedDithering()
         QMessageBox::warning(this, "Error", "No image loaded.");
         return;
     }
-    updateFilteredImage(ImageProcessor::applyOrderedDithering(filteredImage, orderedDitheringComboBox->currentData().toInt()));
+    updateFilteredImage(ImageProcessor::applyOrderedDithering(filteredImage, orderedDitheringComboBox->currentData().toInt(), ditheringQuantizationSpinBox->value()));
 }
 
 void MainWindow::applyUniformQuantization()
@@ -458,4 +487,26 @@ void MainWindow::applyGreyscaleFilter()
         return;
     }
     updateFilteredImage(ImageProcessor::applyGreyscaleFilter(filteredImage));
+}
+
+void MainWindow::applyHSVFilter()
+{
+    if (originalImage.isNull())
+    {
+        QMessageBox::warning(this, "Error", "No image loaded.");
+        return;
+    }
+
+    QImage hsvImage = ImageProcessor::convertToHSV(originalImage);
+
+    QImage hChannel = ImageProcessor::extractChannel(hsvImage, ImageProcessor::Channel::H);
+    QImage sChannel = ImageProcessor::extractChannel(hsvImage, ImageProcessor::Channel::S);
+    QImage vChannel = ImageProcessor::extractChannel(hsvImage, ImageProcessor::Channel::V);
+
+    QImage rgbImage = ImageProcessor::convertHSVToRGB(hChannel, sChannel, vChannel);
+
+    HfilteredImageLabel->setPixmap(QPixmap::fromImage(hChannel).scaled(HfilteredImageLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    SfilteredImageLabel->setPixmap(QPixmap::fromImage(sChannel).scaled(SfilteredImageLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    VfilteredImageLabel->setPixmap(QPixmap::fromImage(vChannel).scaled(VfilteredImageLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    RGBfilteredImageLabel->setPixmap(QPixmap::fromImage(rgbImage).scaled(RGBfilteredImageLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }

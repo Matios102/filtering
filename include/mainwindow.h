@@ -44,12 +44,22 @@ private slots:
 
     void applyGreyscaleFilter();
 
+    void applyHSVFilter();
+
 private:
     QLabel *originalImageLabel;
     QLabel *filteredImageLabel;
+    QLabel *HfilteredImageLabel;
+    QLabel *VfilteredImageLabel;
+    QLabel *SfilteredImageLabel;
+    QLabel *RGBfilteredImageLabel;
     QPixmap originalPixmap;
     QImage originalImage;
     QImage filteredImage;
+    QImage HfilteredImage;
+    QImage VfilteredImage;
+    QImage SfilteredImage;
+    QImage RGBfilteredImage;
 
     Kernel blurKernel;
     Kernel gaussianBlurKernel;
@@ -65,6 +75,8 @@ private:
     QSpinBox *rQuantSpinBox;
     QSpinBox *gQuantSpinBox;
     QSpinBox *bQuantSpinBox;
+
+    QSpinBox *ditheringQuantizationSpinBox;
 
     void updateFilteredImage(const QImage &newImage);
     void openFilterEditorDialog();
